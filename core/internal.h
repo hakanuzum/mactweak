@@ -36,6 +36,11 @@ static inline bool RESPONDS(id o, const char *s) {
 // stack overflows.
 #define CLASS(name) ((id)objc_getClass(name))
 
+// +alloc and -init... through objc_msgSend: tell ARC the result is already
+// retained (and that -init consumes the receiver), or every call leaks.
+typedef id __attribute__((ns_returns_retained)) (*mt_alloc_fn)(id, SEL);
+static inline id MSG_ALLOC(const char *cls) { return ((mt_alloc_fn)objc_msgSend)(CLASS(cls), SEL_("alloc")); }
+
 // Replaces a method with a block and returns the original implementation (core.m).
 IMP mt_hook(Class cls, const char *selector, id block);
 

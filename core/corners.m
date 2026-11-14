@@ -21,8 +21,9 @@ void mt_corners_install(void) {
         id v = ((id(*)(id, SEL))orig_radii)(self, SEL_("_getCachedWindowCornerRadii"));
         double top, bottom;
         if (!v || MSG_BOOL(v, "isZero") || !mt_target_radius(&top, &bottom)) return v;
-        id radii = MSG(CLASS("NSViewCornerRadii"), "alloc");
-        return ((id(*)(id, SEL, double, double, double, double))objc_msgSend)(
-            radii, SEL_("initWithTopLeft:topRight:bottomLeft:bottomRight:"), top, top, bottom, bottom);
+        typedef id __attribute__((ns_returns_retained)) (*init_fn)(__attribute__((ns_consumed)) id, SEL, double, double,
+                                                                       double, double);
+        return ((init_fn)objc_msgSend)(MSG_ALLOC("NSViewCornerRadii"), SEL_("initWithTopLeft:topRight:bottomLeft:bottomRight:"),
+                                       top, top, bottom, bottom);
     });
 }

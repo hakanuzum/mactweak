@@ -54,6 +54,12 @@ enum {
     MT_THEME_GRAPHITE = 4,
     MT_THEME_DOT = 5,
     MT_THEME_PASTEL = 6,
+    MT_THEME_AQUA = 7,      // glossy gel
+    MT_THEME_PLATINUM = 8,  // beveled gray boxes
+    MT_THEME_BLACK = 9,
+    MT_THEME_SYMBOLS = 10,  // gray, symbols always visible
+    MT_THEME_CAPSULE = 11,
+    MT_THEME_NEON = 12,     // dark with a glowing colored rim
 };
 
 static inline uint64_t mt_encode_radius(double top, double bottom) {

@@ -75,6 +75,12 @@ struct ButtonTheme: Identifiable, Hashable {
         ButtonTheme(id: 4, name: "Graphite"),
         ButtonTheme(id: 5, name: "Dot"),
         ButtonTheme(id: 6, name: "Pastel"),
+        ButtonTheme(id: 7, name: "Aqua"),
+        ButtonTheme(id: 8, name: "Platinum"),
+        ButtonTheme(id: 9, name: "Black"),
+        ButtonTheme(id: 10, name: "Symbols"),
+        ButtonTheme(id: 11, name: "Capsule"),
+        ButtonTheme(id: 12, name: "Neon"),
     ]
 
     static func named(_ id: Int) -> String { all.first { $0.id == id }?.name ?? "System" }
@@ -82,6 +88,8 @@ struct ButtonTheme: Identifiable, Hashable {
     static func color(theme: Int, index: Int) -> Color {
         switch theme {
         case 4: return Color(red: 0.557, green: 0.557, blue: 0.576)
+        case 9: return Color(red: 0.14, green: 0.14, blue: 0.15)
+        case 10: return Color(red: 0.45, green: 0.45, blue: 0.47)
         case 6: return [Color(red: 0.957, green: 0.651, blue: 0.627), Color(red: 0.965, green: 0.835, blue: 0.557),
                         Color(red: 0.659, green: 0.867, blue: 0.647)][index]
         default: return [Color(red: 1.0, green: 0.373, blue: 0.341), Color(red: 0.996, green: 0.737, blue: 0.180),

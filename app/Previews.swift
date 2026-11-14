@@ -69,28 +69,82 @@ struct TrafficLight: View {
     var hovering = false
 
     var body: some View {
-        let fill = ButtonTheme.color(theme: theme, index: index)
+        let tint = ButtonTheme.color(theme: theme, index: index)
         let d = theme == 5 ? size * 0.64 : size
         ZStack {
             switch theme {
             case 2:
-                RoundedRectangle(cornerRadius: d * 0.28, style: .continuous).fill(fill)
+                RoundedRectangle(cornerRadius: d * 0.28, style: .continuous).fill(tint)
             case 3 where !hovering:
-                Circle().strokeBorder(fill, lineWidth: max(1.2, d * 0.12))
+                Circle().strokeBorder(tint, lineWidth: max(1.2, d * 0.12))
+            case 7:  // Aqua
+                Circle().fill(LinearGradient(colors: [tint.mix(.black, 0.28), tint.mix(.white, 0.38)], startPoint: .top, endPoint: .bottom))
+                Ellipse().fill(LinearGradient(colors: [.white.opacity(0.85), .white.opacity(0.08)], startPoint: .top, endPoint: .bottom))
+                    .frame(width: d * 0.66, height: d * 0.45).offset(y: -d * 0.22)
+                Circle().strokeBorder(tint.mix(.black, 0.5).opacity(0.7), lineWidth: 0.6)
+            case 8:  // Platinum
+                PlatinumBox(index: index, size: d)
+            case 9:  // Black
+                Circle().fill(LinearGradient(colors: [Color(white: 0.24), Color(white: 0.14)], startPoint: .top, endPoint: .bottom))
+            case 11:  // Capsule
+                Capsule().fill(tint).frame(height: d * 0.62)
+            case 12:  // Neon
+                Circle().fill(Color(white: 0.10)).padding(d * 0.08)
+                Circle().strokeBorder(tint, lineWidth: max(1.2, d * 0.11)).padding(d * 0.08)
+                    .shadow(color: tint.opacity(0.9), radius: d * 0.2)
             default:
-                Circle().fill(fill)
+                Circle().fill(tint)
             }
-            if theme != 2 && !(theme == 3 && !hovering) {
+            if [0, 1, 4, 5, 6, 9, 10].contains(theme) || (theme == 3 && hovering) {
                 Circle().strokeBorder(Color.black.opacity(0.12), lineWidth: 0.5)
             }
-            if hovering && theme != 5 {
+            if (hovering || theme == 10) && theme != 5 && theme != 8 {
                 Glyph(index: index)
-                    .stroke(theme == 4 ? Color.white.opacity(0.9) : Color.black.opacity(0.55),
-                            style: StrokeStyle(lineWidth: max(1.1, d * 0.11), lineCap: .round))
+                    .stroke(glyphColor(tint), style: StrokeStyle(lineWidth: max(1.1, d * 0.11), lineCap: .round))
+                    .frame(width: d, height: theme == 11 ? d * 0.62 : d)
             }
         }
         .frame(width: d, height: d)
         .frame(width: size, height: size)
+    }
+
+    private func glyphColor(_ tint: Color) -> Color {
+        if theme == 12 { return tint }
+        return [4, 9, 10].contains(theme) ? .white.opacity(0.92) : .black.opacity(0.55)
+    }
+}
+
+/// Beveled gray box (Platinum theme).
+struct PlatinumBox: View {
+    let index: Int
+    let size: CGFloat
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 1.5)
+                .fill(LinearGradient(colors: [Color(white: 0.97), Color(white: 0.72)], startPoint: .top, endPoint: .bottom))
+            RoundedRectangle(cornerRadius: 0.8).strokeBorder(.white.opacity(0.85), lineWidth: 0.7).padding(1.1)
+            RoundedRectangle(cornerRadius: 1.5).strokeBorder(Color(white: 0.28), lineWidth: 0.9)
+            if index == 1 {
+                VStack(spacing: size * 0.1) {
+                    ForEach(0..<3) { _ in Rectangle().fill(Color(white: 0.35)).frame(width: size * 0.56, height: 0.7) }
+                }
+            } else if index == 2 {
+                RoundedRectangle(cornerRadius: 0.5).strokeBorder(Color(white: 0.35), lineWidth: 0.8)
+                    .frame(width: size * 0.44, height: size * 0.44)
+            }
+        }
+        .padding(0.5)
+    }
+}
+
+extension Color {
+    /// Blends toward another color in sRGB.
+    func mix(_ other: Color, _ t: Double) -> Color {
+        let a = NSColor(self).usingColorSpace(.sRGB) ?? .black, b = NSColor(other).usingColorSpace(.sRGB) ?? .black
+        return Color(red: a.redComponent + (b.redComponent - a.redComponent) * t,
+                     green: a.greenComponent + (b.greenComponent - a.greenComponent) * t,
+                     blue: a.blueComponent + (b.blueComponent - a.blueComponent) * t)
     }
 }
 
