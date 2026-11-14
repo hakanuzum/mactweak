@@ -49,15 +49,17 @@ lipo -create build/tmp/MacTweak-arm64 build/tmp/MacTweak-x86_64 -output "$C/MacO
 echo "› icon"
 SET=build/tmp/AppIcon.iconset
 mkdir -p "$SET"
-if [[ -f icon/private/icon.png ]]; then
-    # Local artwork (not in git): a 1024 px PNG, resized for every slot.
+# Local artwork (not in git) is for this machine only; a DMG always gets the
+# vector icon, which is free to share.
+if [[ -f icon/private/icon.png && "${1:-}" != "--dmg" ]]; then
+    # Local artwork: a 1024 px PNG, resized for every slot.
     for s in 16 32 128 256 512; do
         sips -z $s $s icon/private/icon.png --out "$SET/icon_${s}x${s}.png" >/dev/null
         sips -z $((s * 2)) $((s * 2)) icon/private/icon.png --out "$SET/icon_${s}x${s}@2x.png" >/dev/null
     done
 else
     xcrun swiftc -O icon/main.swift -o build/tmp/draw-icon
-    build/tmp/draw-icon "$SET" assets/hand-high-contrast.svg
+    build/tmp/draw-icon "$SET" press assets/hand-flat.svg assets/hand-high-contrast.svg
 fi
 iconutil -c icns "$SET" -o "$C/Resources/AppIcon.icns"
 

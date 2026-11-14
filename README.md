@@ -1,90 +1,157 @@
-# MacTweak
+<div align="center">
 
-macOS 27 pencerelerini istediğiniz gibi ayarlar: köşe yarıçapı, trafik ışığı düğme temaları (31 tema), başlık çubuğu, pencere kenarlığı, arka plan pencerelerinin soldurulması, macOS'in pencere çizgisi ve gölgesi. Ayar ekranı Sistem Ayarları düzeninde, arayüz İngilizce.
+<img src="docs/media/logo.png" width="112" alt="">
 
-## Gereksinim
+<h1>MacTweak</h1>
 
-SIP kapalı ve AMFI devre dışı (`boot-args` içinde `amfi_get_out_of_my_way=1`). Bu ikisi olmadan başka uygulamaların içine kod yüklenemez; bu işi yapan hiçbir araç çalışmaz. SIP yalnızca Kurtarma Modu'nda kapatılabilir, hiçbir uygulama bunu yapamaz.
+<b>Your windows, your corners, your buttons.</b>
 
-MacTweak root yetkisi istemez ve sistem süreçlerine kod yüklemez.
+Corner radius, traffic-light themes, borders, outlines and shadows for every app on macOS — from a settings window that looks like the old System Preferences.
 
-## Parçalar
+<p>
+<img alt="macOS 27" src="https://img.shields.io/badge/macOS-27-000000?logo=apple&logoColor=white">
+<img alt="Apple silicon and Intel" src="https://img.shields.io/badge/Apple%20silicon%20%7C%20Intel-universal-555555">
+<img alt="License: GPL-3.0" src="https://img.shields.io/badge/License-GPL--3.0-blue">
+</p>
 
-| Klasör | Çıktı | Ne yapar |
-|---|---|---|
-| `core/` | `libmactweak.dylib` | Her uygulamaya `DYLD_INSERT_LIBRARIES` ile yüklenir. Hiçbir çerçeveye bağlanmaz: AppKit'i olmayan süreçlerde (terminal komutları) yüklenir ama hiçbir şey yapmaz. AppKit sınıflarına adlarıyla, objc çalışma zamanından ulaşır. |
-| `agent/` | `mactweak-agent` | Kullanıcı LaunchAgent'ı. Tercihleri notify durumlarına yazar ve tutar, çekirdeği `~/Library/Application Support/MacTweak`'e kopyalar, `launchctl setenv` ile ortama ekler, çökme raporlarını izler. |
-| `app/` | `MacTweak.app` | SwiftUI ayar uygulaması. |
-| `icon/` | `AppIcon.icns` | `icon/main.swift` ikonu vektörle çizer (plaka, şalter, vidalar, el damgası). `icon/private/icon.png` varsa onu kullanır (git'e girmez). |
+<table>
+<tr>
+<td align="center"><img src="docs/media/before.png" width="420" alt="Font Book with the macOS defaults"><br><sub>macOS 27 as it ships (Graphite accent)</sub></td>
+<td align="center"><img src="docs/media/after.png" width="420" alt="Font Book with 6 pt corners, Aqua buttons and a gold border"><br><sub>With MacTweak: 6 pt corners, Aqua buttons, a gold border on the active window</sub></td>
+</tr>
+</table>
 
-Çekirdek modülleri: `corners.m` (köşe yarıçapı), `titlebar.m` (başlık çubuğu), `buttons.m` (trafik ışığı temaları), `border.m` (kenarlık, soldurma, gölge ve macOS'in pencere çizgisi). Yeni bir modül için:
+<h3><a href="https://github.com/hakanuzum/mactweak/releases/latest">Download</a> · <a href="#install">Install</a> · <a href="#is-it-safe">Is it safe?</a></h3>
 
-1. `core/` altına dosyayı ekleyin.
-2. `internal.h`'ye `mt_<ad>_install` bildirimini yazın.
-3. `core.m`'deki `install()` fonksiyonuna çağrısını ekleyin.
-4. `shared.h`'ye bayrağı ekleyin.
-5. `agent.m`'ye tercihi ekleyin.
-6. `app/Panes.swift`'e sayfasını ekleyin.
+<sub>⚠️ MacTweak needs System Integrity Protection turned off. Read <a href="#install">Install</a> before you download.</sub>
 
-### Ayarlar uygulamalara nasıl ulaşıyor
+</div>
 
-Korumalı (sandbox) uygulamalar başka alan adının tercihlerini ve dosyaları okuyamaz, ama Darwin notify durumunu okuyabilir (TextEdit'te test edildi). Ajan iki tür durum yazar:
+---
 
-- 64 bitlik bir genel durum: `dev.hakanuzum.mactweak.settings`
-- Uygulama başına bir durum: `dev.hakanuzum.mactweak.app.<paket>`
+<table width="100%">
+<tbody>
+<tr valign="top">
+<td width="50%">
+<img src="docs/media/corners.png" alt="The Corners pane with six corner styles">
+<h3>Corners</h3>
+<p>Pick a radius for every window: macOS 27's 16 pt, Medium (13 pt), Sequoia (10 pt), Catalina (5 pt on top, square at the bottom), Square, or your own top and bottom values.</p>
+<p>Open windows change right away. Give a single app its own radius in <b>App Rules</b>.</p>
+</td>
+<td width="50%">
+<img src="docs/media/buttons.png" alt="The Buttons pane with the built-in themes">
+<h3>31 button themes</h3>
+<p>Close, minimize and zoom, redrawn: 13 built-in styles (Classic, Aqua, Platinum, Ring, Capsule, Neon, Symbols…) and 18 sets taken from the most downloaded KDE and GTK window decorations.</p>
+<p>Buttons can keep their color in background windows, so you always know where close is.</p>
+</td>
+</tr>
+<tr valign="top">
+<td width="50%">
+<img src="docs/media/border.png" alt="The Border pane with previews, width and color">
+<h3>Border, fading and outline</h3>
+<p>A colored border around the active window, or all of them: width from 0.5 to 8 pt, any color. Background windows can fade to 40%.</p>
+<p>macOS's own thin window outline is adjustable too — the dark line outside and the light line inside — as are the shadow's strength and size.</p>
+</td>
+<td width="50%">
+<img src="docs/media/titlebar.png" alt="The Title Bar pane with spacing and legacy app options">
+<h3>Title bar</h3>
+<p>Move the traffic lights closer together or further apart, or indent and center them in windows without a toolbar.</p>
+<p>Apps built for older macOS versions can get the macOS 26 title bar height and button spacing, so they stop looking out of place.</p>
+</td>
+</tr>
+</tbody>
+</table>
 
-Bit düzeni `core/shared.h`'de. Notify durumu yalnızca bir süreç kaydı açık tuttuğu sürece yaşar, bu yüzden ajan sürekli çalışır. Ajan yoksa çekirdek hiçbir şeye dokunmaz.
+---
 
-Ayar değişince ajan `dev.hakanuzum.mactweak.settings` bildirimini yayınlar. Çekirdek de açık pencerelerin köşe maskesini ve düğmelerini yeniden çizer. Uygulamayı yeniden başlatmak gerekmez; tek istisna eski uygulamaların başlık ölçüleri.
+<div align="center">
+<img src="docs/media/themes.png" width="760" alt="Eighteen button sets: Sweet, Sweet Mars, Layan, Arc KDE, Nordic, Ambar Blue, Ant, Adapta, Materia, Qogir, Graphite KDE, Orchis KDE, Arc, Glyph, Orchis, Colloid, Nord and Fluent">
+<br><sub>The open-source sets. The KDE ones are in order of their KDE Store downloads; Sweet alone has 1.4 million.</sub>
+</div>
 
-### Kancalar (macOS 27.0.1'de ölçüldü)
+---
 
-- `-[NSThemeFrame _getCachedDefaultWindowCornerRadius]` ve `_getCachedWindowCornerRadii`: köşe maskesi (`NSCGSWindowCornerMask`) bunlardan oluşur. Varsayılan 16 nokta.
-- `+[NSThemeFrame/NSTitledFrame _titlebarHeight:hasSolariumAppearance:]` ve ilgili ölçüler: eski SDK'lı uygulamalarda `NO` gelir (başlık 28 nk). Ayar açıksa `YES` (32 nk).
-- `-[NSThemeFrame _collapseButtonOrigin]`, `_zoomButtonOrigin`: eski uygulamalarda düğme aralığı 20 → 23 nk. Eski/yeni ayrımı ana programın `LC_BUILD_VERSION` sdk alanından (< 26).
-- `-[NSThemeFrame _shouldCenterTrafficLights]`: düğmeleri içeri alır (9 → 20 nk) ve ortalar. Araç çubuklu pencerelerde uygulanmaz.
-- `-[_NSThemeWidgetCell drawWithFrame:inView:]`: trafik ışığı temaları. `buttonID` 25 kapat, 26 küçült, 27 büyüt.
+<div align="center">
+<img src="docs/media/home.png" width="560" alt="The MacTweak window: an icon grid like the early System Preferences">
+</div>
 
-Klavye dili baloncuğu (`TUINSCursorUIController`, 11.5 nk) gibi başlıksız pencerelere dokunulmaz.
+Everything lives in one window laid out like the System Preferences of the early 2000s: General, Corners, Buttons, Title Bar, Border, App Rules, and a Status page that shows which open apps are using MacTweak and which need a relaunch.
 
-**Dikkat:** Çekirdeğin kurucusu (constructor), uygulama kendini başlatmadan önce çalışır. Orada AppKit sınıflarına mesaj göndermeyin; ARC'nin eklediği `retain` de bir mesajdır. Mesaj gönderilirse `+initialize` erken çalışır ve SwiftUI, Chrome, Electron gibi uygulamalar çöker. `CLASS()` bu yüzden fonksiyon değil makro.
+## Install
 
-## Kurulum (DMG)
+MacTweak works by loading a small library into the apps you open and changing how they draw their windows. macOS does not allow that out of the box, so two protections have to be turned off, once per Mac. **This lowers your Mac's security**; read [Is it safe?](#is-it-safe) first.
 
-1. SIP ve AMFI (bir kez, her Mac'te):
-   - Kurtarma Modu → Terminal: `csrutil disable`, sonra yeniden başlatın.
-   - macOS'te: `sudo nvram boot-args="amfi_get_out_of_my_way=1"`, sonra yeniden başlatın. Yazımı kontrol edin: `nvram boot-args`.
-2. `MacTweak-<sürüm>.dmg`'yi açın, `MacTweak.app`'i Uygulamalar'a sürükleyin.
-3. MacTweak'i açın, General → **Start**. Status sayfası SIP, AMFI ve ajan durumunu gösterir.
+**1. Turn off System Integrity Protection**
 
-Uygulama yerel (ad-hoc) imzalı; indirilen DMG'de ilk açılışta macOS onay ister (Sağ tık → Aç). SIP veya AMFI açıkken ajan uygulamalara yüklenmez, yani hiçbir şey bozulmaz.
+1. Shut down. Press and hold the power button until you see *Loading startup options*.
+2. Choose **Options**, then **Utilities → Terminal**, and run:
+   ```bash
+   csrutil disable
+   ```
+3. Confirm, enter your password and restart.
 
-Geri almak: General → Start at login kapalı, uygulamayı silin. Kurtarma'da `csrutil enable`, macOS'te `sudo nvram -d boot-args`.
+**2. Let AMFI load the library**
 
-## Derleme
+Back in macOS, in Terminal:
 
-```sh
-./build.sh            # build/MacTweak.app
-./build.sh --install  # /Applications/MacTweak.app + çalışan ajanı yeniden başlat
-./build.sh --dmg      # dist/MacTweak-<sürüm>.dmg + .sha256
+```bash
+sudo nvram boot-args="amfi_get_out_of_my_way=1"
 ```
 
-Sürüm `app/Info.plist` içindeki `CFBundleShortVersionString`; `CFBundleVersion` ve `MTCoreBuild` derleme zamanından gelir.
+Check the spelling with `nvram boot-args` (a typo is silently ignored), then restart.
 
-Xcode 27 gerekir (`DEVELOPER_DIR` varsayılanı `/Applications/Xcode.app`).
+**3. Install the app**
 
-## Güvenlik ağı
+Download the latest `.dmg` from [Releases](https://github.com/hakanuzum/mactweak/releases/latest) and drag MacTweak onto Applications. It is signed ad hoc, not notarized, so the first time, right-click it in `/Applications` and choose **Open**.
 
-- Çöken iş parçacığında `libmactweak.dylib` varsa uygulama otomatik hariç tutulur ve bildirim gösterilir. MacTweak yalnızca yüklüyken 10 dakikada 3 çökme olursa da hariç tutulur.
-- `MACTWEAK_DISABLE=1` ortam değişkeniyle başlatılan süreçte çekirdek hiçbir şey yapmaz.
-- Güvenli Mod'da oturum ajanları çalışmaz, MacTweak yüklenmez.
-- Elle kapatmak: `launchctl bootout gui/$(id -u)/dev.hakanuzum.mactweak.agent; launchctl unsetenv DYLD_INSERT_LIBRARIES`
+In **General**, press **Start**. MacTweak loads into the apps you open from then on; the **Status** page lists the ones still running without it, each with a **Relaunch** button.
 
-## Günlük
+If SIP or AMFI is still on, MacTweak stays out of every app: it never half-works on a Mac where it cannot work.
 
-`~/Library/Logs/MacTweak/agent.log`. Çekirdek için uygulamayı `MACTWEAK_LOG=1` ile başlatın.
+### Uninstall
 
-## Lisanslar
+1. In **General**, turn off **Start at login**. Open windows return to the macOS defaults.
+2. Delete MacTweak from Applications.
+3. Turn the protections back on: `sudo nvram -d boot-args` in macOS, then `csrutil enable` in the Recovery Terminal.
 
-- `assets/icons/*.svg`: WhiteSur ikon teması (vinceliuice), GPL-3.0 (`assets/WHITESUR-ICONS-GPL-3.0.txt`). Kaynak: github.com/vinceliuice/WhiteSur-icon-theme. Apple logosu içeren ikonlar bilerek seçilmedi. Renkleri logoya uysun diye gri tonlamaya çevrildi (`icon/grayscale_icons.py`; yeni ikon eklenince bu betiği ona da çalıştırın). GPL-3.0 yüzünden MacTweak dağıtılacaksa GPL-3.0 uyumlu lisanslanmalı.
-- `assets/hand-*.svg`: Microsoft Fluent Emoji, MIT (`assets/FLUENT-EMOJI-LICENSE`). Uygulama ikonundaki el damgası bunlardan çizilir.
+## Is it safe?
+
+Turning off SIP and AMFI is a real trade-off. With them off, other software could load code into apps the same way MacTweak does. Only do it on a Mac you control, and turn them back on if you stop using MacTweak.
+
+What MacTweak itself does and does not do:
+
+- No root, no admin password, no kernel extension. It runs as your user.
+- It only acts inside apps (`.app` bundles). Command-line tools get the library, but it stays idle in them.
+- It never touches the login window, password and Touch ID prompts, the screen saver, the Dock or Window Manager.
+- If an app crashes inside MacTweak, the agent sees the crash report and turns MacTweak off for that app. You can see and undo this in **App Rules**.
+- Settings reach apps through Darwin notifications. MacTweak sends nothing over the network.
+
+## How it works
+
+| Part | What it does |
+|---|---|
+| `core/` → `libmactweak.dylib` | Loaded into each app through `DYLD_INSERT_LIBRARIES`. Links no frameworks; reaches AppKit through the Objective-C runtime and hooks the private methods that draw window corners, title bars and the close, minimize and zoom buttons. |
+| `agent/` → `mactweak-agent` | A user LaunchAgent. Turns your preferences into notification state that every app can read (sandboxed ones too), adds the library to the launchd environment and watches for crash reports. |
+| `app/` → `MacTweak.app` | The SwiftUI settings window. |
+
+The hooks, the measurements behind them and how to add a module are in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
+## Build from source
+
+Needs Xcode 26 or later.
+
+```bash
+./build.sh            # build/MacTweak.app
+./build.sh --install  # copy to /Applications and restart the agent
+./build.sh --dmg      # dist/MacTweak-<version>.dmg
+```
+
+## Credits
+
+The button sets come from open-source desktop themes: [Sweet](https://github.com/EliverLara/Sweet), [Nordic](https://github.com/EliverLara/Nordic) and [Ant](https://github.com/EliverLara/Ant) by Eliver Lara; [Layan](https://github.com/vinceliuice/Layan-kde), [Qogir](https://github.com/vinceliuice/Qogir-kde), [Graphite](https://github.com/vinceliuice/Graphite-kde-theme), [Orchis](https://github.com/vinceliuice/Orchis-kde), [Colloid](https://github.com/vinceliuice/Colloid-gtk-theme), [Fluent](https://github.com/vinceliuice/Fluent-gtk-theme) and [WhiteSur](https://github.com/vinceliuice/WhiteSur-gtk-theme) by Vince Liuice; [Arc](https://github.com/jnsh/arc-theme); and [Arc KDE](https://github.com/PapirusDevelopmentTeam/arc-kde), [Adapta KDE](https://github.com/PapirusDevelopmentTeam/adapta-kde) and [Materia KDE](https://github.com/PapirusDevelopmentTeam/materia-kde) by the Papirus team. The pane icons are from the [WhiteSur icon theme](https://github.com/vinceliuice/WhiteSur-icon-theme), and the hand in the app icon is [Fluent Emoji](https://github.com/microsoft/fluentui-emoji). Each set's source and license: [assets/button-themes/SOURCES.md](assets/button-themes/SOURCES.md).
+
+## License
+
+[GPL-3.0](LICENSE), like most of the artwork it ships with. Fluent Emoji and the WhiteSur GTK theme are MIT.
+
+MacTweak is not affiliated with Apple. macOS is a trademark of Apple Inc.
