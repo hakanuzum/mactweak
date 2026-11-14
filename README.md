@@ -14,12 +14,12 @@ Corner radius, traffic-light themes, borders, outlines and shadows for every app
 <img alt="License: GPL-3.0" src="https://img.shields.io/badge/License-GPL--3.0-blue">
 </p>
 
-<table>
-<tr>
-<td align="center"><img src="docs/media/before.png" width="420" alt="Font Book with the macOS defaults"><br><sub>macOS 27 as it ships (Graphite accent)</sub></td>
-<td align="center"><img src="docs/media/after.png" width="420" alt="Font Book with 6 pt corners, Aqua buttons and a gold border"><br><sub>With MacTweak: 6 pt corners, Aqua buttons, a gold border on the active window</sub></td>
-</tr>
-</table>
+<img src="docs/media/corners-live.gif" width="760" alt="One Font Book window going from macOS 27's 16 pt corners to Medium, Sequoia, Catalina and square, live">
+<br><sub>One open window, five corner styles, changed live. No relaunch.</sub>
+
+<br><br>
+
+<img src="docs/media/corners-strip.png" width="860" alt="The top-left corner of the same window at 16, 13, 10, 5 and 0 pt">
 
 <h3><a href="https://github.com/hakanuzum/mactweak/releases/latest">Download</a> · <a href="#install">Install</a> · <a href="#is-it-safe">Is it safe?</a></h3>
 
@@ -61,6 +61,18 @@ Corner radius, traffic-light themes, borders, outlines and shadows for every app
 </tr>
 </tbody>
 </table>
+
+---
+
+<div align="center">
+<h3>All together</h3>
+<table>
+<tr>
+<td align="center"><img src="docs/media/before.png" width="420" alt="Font Book with the macOS defaults"><br><sub>macOS 27 as it ships (Graphite accent)</sub></td>
+<td align="center"><img src="docs/media/after.png" width="420" alt="Font Book with 6 pt corners, Aqua buttons and a gold border"><br><sub>With MacTweak: 6 pt corners, Aqua buttons, a gold border on the active window</sub></td>
+</tr>
+</table>
+</div>
 
 ---
 
