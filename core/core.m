@@ -129,9 +129,11 @@ static void refresh_windows(void) {
         MSG_SET_BOOL(frame, "setNeedsDisplay:", YES);
         for (unsigned long b = 0; b < 3; b++) {
             id button = ((id(*)(id, SEL, unsigned long))objc_msgSend)(w, SEL_("standardWindowButton:"), b);
-            if (RESPONDS(button, "update")) MSG_VOID(button, "update");
-            MSG_VOID(MSG(button, "cell"), "update");
+            // Only ask for a redraw. -update recomputes the button's visibility,
+            // which hides the buttons in Chromium windows (Helium, Chrome) that
+            // manage it themselves.
             MSG_SET_BOOL(button, "setNeedsDisplay:", YES);
+            MSG_VOID(MSG(button, "layer"), "setNeedsDisplay");
         }
         MSG_VOID(w, "invalidateShadow");
     }
