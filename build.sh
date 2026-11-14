@@ -14,12 +14,16 @@ mkdir -p "$C/MacOS" "$C/Frameworks" "$C/Resources" build/tmp
 
 WARN="-Wall -Wextra -Wno-unused-parameter"
 
+echo "› button themes (assets/button-themes)"
+xcrun swiftc -O tools/pack_button_themes.swift -o build/tmp/pack-button-themes
+build/tmp/pack-button-themes assets/button-themes build/tmp/button_themes.c build/tmp/ButtonThemes
+
 echo "› core (libmactweak.dylib)"
 # Deliberately links no frameworks: it is also injected into command line tools and does nothing there.
 # arm64e: Apple's own apps; x86_64: apps running under Rosetta.
 xcrun clang -fobjc-arc -Os $WARN -dynamiclib -arch arm64 -arch arm64e -arch x86_64 \
     -mmacosx-version-min=$TARGET -Wl,-dead_strip_dylibs -install_name @rpath/libmactweak.dylib \
-    core/core.m core/corners.m core/titlebar.m core/buttons.m \
+    -Icore core/core.m core/corners.m core/titlebar.m core/buttons.m build/tmp/button_themes.c \
     -o "$C/Frameworks/libmactweak.dylib" 2>&1 | grep -v 'arm64e.*ABI' || true
 test -f "$C/Frameworks/libmactweak.dylib"
 if otool -L "$C/Frameworks/libmactweak.dylib" | grep -q '\.framework/'; then
@@ -55,6 +59,7 @@ iconutil -c icns "$SET" -o "$C/Resources/AppIcon.icns"
 
 mkdir -p "$C/Resources/Icons"
 cp assets/icons/*.svg "$C/Resources/Icons/"
+cp -R build/tmp/ButtonThemes "$C/Resources/ButtonThemes"
 cp app/Info.plist "$C/Info.plist"
 
 echo "› ad-hoc signature"

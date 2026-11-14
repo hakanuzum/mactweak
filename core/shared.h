@@ -60,6 +60,9 @@ enum {
     MT_THEME_SYMBOLS = 10,  // gray, symbols always visible
     MT_THEME_CAPSULE = 11,
     MT_THEME_NEON = 12,     // dark with a glowing colored rim
+    // 32 and up: image themes from open-source GTK/xfwm4 themes
+    // (assets/button-themes, packed by tools/pack_button_themes.swift)
+    MT_THEME_IMAGE_BASE = 32,
 };
 
 static inline uint64_t mt_encode_radius(double top, double bottom) {

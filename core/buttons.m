@@ -5,6 +5,7 @@
 
 #include <math.h>
 
+#include "button_themes.h"
 #include "internal.h"
 
 typedef struct {
@@ -125,6 +126,28 @@ static void draw_neon(CGRect r, RGB tint, double alpha, double size) {
     restore_gstate();
 }
 
+// Image themes: NSImage per (theme, button, state), made once from the packed PNG bytes.
+static __strong id g_images[16][3][4];
+
+static id theme_image(int theme, int button, int state) {
+    if (theme < 0 || theme >= mt_image_theme_count || theme >= 16) return nil;
+    if (!g_images[theme][button][state]) {
+        mt_png p = mt_image_themes[theme][button][state];
+        if (!p.data) return nil;
+        id data = ((id(*)(id, SEL, const void *, unsigned long, BOOL))objc_msgSend)(
+            CLASS("NSData"), SEL_("dataWithBytesNoCopy:length:freeWhenDone:"), p.data, (unsigned long)p.len, NO);
+        typedef id __attribute__((ns_returns_retained)) (*init_fn)(__attribute__((ns_consumed)) id, SEL, id);
+        g_images[theme][button][state] = ((init_fn)objc_msgSend)(MSG_ALLOC("NSImage"), SEL_("initWithData:"), data);
+    }
+    return g_images[theme][button][state];
+}
+
+static void draw_image(id image, CGRect r, double alpha) {
+    ((void (*)(id, SEL, CGRect, CGRect, unsigned long, double, BOOL, id))objc_msgSend)(
+        image, SEL_("drawInRect:fromRect:operation:fraction:respectFlipped:hints:"), r, CGRectMake(0, 0, 0, 0),  // not CGRectZero: the core links no frameworks
+        2 /* source over */, alpha, YES, nil);
+}
+
 static IMP orig_draw;
 
 void mt_buttons_install(void) {
@@ -146,6 +169,18 @@ void mt_buttons_install(void) {
         bool flipped = MSG_BOOL(view, "isFlipped");
 
         double size = fmin(frame.size.width, frame.size.height);
+        if (theme >= MT_THEME_IMAGE_BASE) {
+            int b = button == BUTTON_CLOSE ? 0 : button == BUTTON_MINIMIZE ? 1 : 2;
+            int state = interaction >= 2 ? 2 : interaction == 1 ? 1 : colored ? 0 : 3;
+            id image = theme_image(theme - MT_THEME_IMAGE_BASE, b, state);
+            if (!image) image = theme_image(theme - MT_THEME_IMAGE_BASE, b, 0);
+            if (image) {
+                CGRect sq = CGRectMake(mid_x(frame) - size / 2, mid_y(frame) - size / 2, size, size);
+                draw_image(image, sq, enabled ? 1.0 : 0.45);
+                return;
+            }
+            theme = MT_THEME_CLASSIC;
+        }
         if (theme == MT_THEME_DOT) size *= 0.64;
         CGRect r = inset(CGRectMake(mid_x(frame) - size / 2, mid_y(frame) - size / 2, size, size), 0.5);
         if (theme == MT_THEME_CAPSULE) r = CGRectMake(mid_x(frame) - size * 0.5, mid_y(frame) - size * 0.31, size, size * 0.62);

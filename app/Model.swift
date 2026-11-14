@@ -66,6 +66,16 @@ struct CornerStyle: Identifiable, Hashable {
 struct ButtonTheme: Identifiable, Hashable {
     let id: Int
     let name: String
+    var folder: String? = nil  // image theme: Resources/ButtonThemes/<folder>
+
+    /// Image of an image theme's button (index 0 close, 1 minimize, 2 zoom) in a state.
+    static func image(theme: Int, index: Int, hovering: Bool) -> NSImage? {
+        guard let folder = all.first(where: { $0.id == theme })?.folder else { return nil }
+        let button = ["close", "min", "max"][index]
+        let url = Bundle.main.url(forResource: "\(button)-\(hovering ? "hover" : "normal")", withExtension: "png",
+                                  subdirectory: "ButtonThemes/\(folder)")
+        return url.flatMap(NSImage.init(contentsOf:))
+    }
 
     static let all: [ButtonTheme] = [
         ButtonTheme(id: 0, name: "System"),
@@ -81,6 +91,13 @@ struct ButtonTheme: Identifiable, Hashable {
         ButtonTheme(id: 10, name: "Symbols"),
         ButtonTheme(id: 11, name: "Capsule"),
         ButtonTheme(id: 12, name: "Neon"),
+        // Image themes from open-source GTK/xfwm4 themes (assets/button-themes)
+        ButtonTheme(id: 32, name: "Arc", folder: "arc"),
+        ButtonTheme(id: 33, name: "Glyph", folder: "graphite"),
+        ButtonTheme(id: 34, name: "Orchis", folder: "orchis"),
+        ButtonTheme(id: 35, name: "Colloid", folder: "colloid"),
+        ButtonTheme(id: 36, name: "Nord", folder: "nord"),
+        ButtonTheme(id: 37, name: "Fluent", folder: "fluent-square"),
     ]
 
     static func named(_ id: Int) -> String { all.first { $0.id == id }?.name ?? "System" }

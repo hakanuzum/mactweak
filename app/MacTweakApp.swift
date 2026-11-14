@@ -1,4 +1,5 @@
 import AppKit
+import Collaboration
 import SwiftUI
 
 @main
@@ -112,26 +113,22 @@ struct IconGrid: View {
     let open: (Pane) -> Void
     @AppStorage(Key.enabled) private var enabled = true
 
-    private let bands: [[Pane]] = [[.general, .corners, .buttons, .titlebar], [.apps]]
+    private let bands: [[Pane]] = [[.general, .corners, .buttons, .titlebar], [.apps, .status, .about]]
 
     var body: some View {
         VStack(spacing: 0) {
-            // Logo band, like the account row of System Preferences
+            // Account band, like System Preferences: this Mac user's picture and name
             HStack(alignment: .center, spacing: 18) {
-                Image(nsImage: NSApp.applicationIconImage)
-                    .resizable()
-                    .interpolation(.high)
-                    .frame(width: 92, height: 92)
-                    .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
+                UserPicture().frame(width: 92, height: 92)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("MacTweak").font(.system(size: 26, weight: .regular))
-                    Text("Window tweaks · \(enabled ? "On" : "Off")")
+                    Text(NSFullUserName()).font(.system(size: 26, weight: .regular))
+                    Text("\(NSUserName()) · MacTweak is \(enabled ? "on" : "off")")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                GridIcon(pane: .status, dimmed: !Pane.status.matches(search), open: open)
-                GridIcon(pane: .about, dimmed: !Pane.about.matches(search), open: open)
+                Button(enabled ? "Turn Off" : "Turn On") { enabled.toggle() }
+                    .controlSize(.large)
             }
             .padding(.horizontal, 28)
             .padding(.vertical, 22)
@@ -181,5 +178,21 @@ struct GridIcon: View {
         .animation(.easeOut(duration: 0.15), value: dimmed)
         .onHover { hovering = $0 }
         .help(pane.summary)
+    }
+}
+
+/// The current user's account picture (Users & Groups), or a placeholder.
+struct UserPicture: View {
+    private let image: NSImage? = CBIdentity(name: NSUserName(), authority: .local())?.image
+
+    var body: some View {
+        if let image {
+            Image(nsImage: image).resizable().interpolation(.high).aspectRatio(contentMode: .fill)
+                .clipShape(Circle())
+                .overlay(Circle().strokeBorder(.black.opacity(0.08), lineWidth: 1))
+                .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
+        } else {
+            Image(systemName: "person.crop.circle.fill").resizable().foregroundStyle(.gray)
+        }
     }
 }

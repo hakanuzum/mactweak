@@ -69,9 +69,17 @@ struct TrafficLight: View {
     var hovering = false
 
     var body: some View {
+        if let image = ButtonTheme.image(theme: theme, index: index, hovering: hovering) {
+            Image(nsImage: image).resizable().interpolation(.high).frame(width: size, height: size)
+        } else {
+            drawn
+        }
+    }
+
+    private var drawn: some View {
         let tint = ButtonTheme.color(theme: theme, index: index)
         let d = theme == 5 ? size * 0.64 : size
-        ZStack {
+        return ZStack {
             switch theme {
             case 2:
                 RoundedRectangle(cornerRadius: d * 0.28, style: .continuous).fill(tint)
