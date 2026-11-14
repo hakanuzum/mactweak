@@ -19,29 +19,8 @@ enum Pane: String, CaseIterable, Identifiable {
         }
     }
 
-    var symbol: String {
-        switch self {
-        case .general: "gearshape.fill"
-        case .corners: "square.dashed"
-        case .buttons: "circle.grid.3x3.fill"
-        case .titlebar: "menubar.rectangle"
-        case .apps: "square.stack.3d.up.fill"
-        case .status: "checkmark.shield.fill"
-        case .about: "info.circle.fill"
-        }
-    }
-
-    var color: Color {
-        switch self {
-        case .general: .gray
-        case .corners: .indigo
-        case .buttons: .pink
-        case .titlebar: .teal
-        case .apps: .red
-        case .status: .green
-        case .about: .blue
-        }
-    }
+    /// Fluent Emoji 3D artwork in Resources/Icons (MIT, see assets/FLUENT-EMOJI-LICENSE).
+    var iconName: String { rawValue }
 
     var summary: String {
         switch self {

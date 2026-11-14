@@ -1,18 +1,22 @@
 import AppKit
 import SwiftUI
 
-/// The rounded, colored icon tiles used by System Settings.
-struct SettingsIcon: View {
-    let symbol: String
-    let color: Color
+/// A pane's icon: the bundled 3D artwork, or a neutral placeholder.
+struct PaneIcon: View {
+    let pane: Pane
     var size: CGFloat = 20
 
     var body: some View {
-        Image(systemName: symbol)
-            .font(.system(size: size * 0.55, weight: .semibold))
-            .foregroundStyle(.white)
-            .frame(width: size, height: size)
-            .background(color.gradient, in: RoundedRectangle(cornerRadius: size * 0.23, style: .continuous))
+        Group {
+            if let url = Bundle.main.url(forResource: pane.iconName, withExtension: "png", subdirectory: "Icons"),
+               let image = NSImage(contentsOf: url) {
+                Image(nsImage: image).resizable().interpolation(.high)
+            } else {
+                Image(systemName: "square.dashed").resizable()
+            }
+        }
+        .aspectRatio(contentMode: .fit)
+        .frame(width: size, height: size)
     }
 }
 
@@ -23,7 +27,7 @@ struct PaneHeader: View {
     var body: some View {
         Section {
             VStack(spacing: 8) {
-                SettingsIcon(symbol: pane.symbol, color: pane.color, size: 56)
+                PaneIcon(pane: pane, size: 64)
                     .padding(.top, 6)
                 Text(pane.title).font(.title2.bold())
                 Text(pane.summary)
@@ -47,7 +51,7 @@ struct NavigationRow: View {
     var body: some View {
         Button { open(pane) } label: {
             HStack(spacing: 10) {
-                SettingsIcon(symbol: pane.symbol, color: pane.color)
+                PaneIcon(pane: pane, size: 24)
                 Text(pane.title).foregroundStyle(.primary)
                 Spacer()
                 if !value.isEmpty { Text(value).foregroundStyle(.secondary) }

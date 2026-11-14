@@ -71,4 +71,4 @@ Xcode 27 gerekir (`DEVELOPER_DIR` varsayılanı `/Applications/Xcode.app`).
 
 ## Lisanslar
 
-`assets/hand-high-contrast.svg`: Microsoft Fluent Emoji, MIT (`assets/FLUENT-EMOJI-LICENSE`).
+`assets/hand-high-contrast.svg` ve `assets/icons/*.png`: Microsoft Fluent Emoji (3D), MIT (`assets/FLUENT-EMOJI-LICENSE`).

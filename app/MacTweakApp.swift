@@ -7,10 +7,10 @@ struct MacTweakApp: App {
 
     var body: some Scene {
         Window("MacTweak", id: "main") {
-            RootView().frame(minWidth: 760, minHeight: 540)
+            RootView()
         }
-        .defaultSize(width: 820, height: 640)
-        .windowResizability(.contentMinSize)
+        .windowResizability(.contentSize)
+        .windowToolbarStyle(.unified(showsTitle: true))
     }
 }
 
@@ -33,62 +33,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ app: NSApplication) -> Bool { true }
 }
 
-/// Sidebar + detail, laid out like System Settings: search field, an account-style
-/// row at the top, grouped sections, and back/forward buttons in the toolbar.
+/// The classic preferences layout: an icon grid ("Show All") that opens panes,
+/// with back/forward, a grid button and search in the toolbar.
 struct RootView: View {
-    @State private var selection: Pane? = .general
-    @State private var history: [Pane] = [.general]
+    @State private var current: Pane?  // nil: the icon grid
+    @State private var history: [Pane?] = [nil]
     @State private var position = 0
-    @State private var navigatingHistory = false
     @State private var search = ""
     @AppStorage(Key.keepOnTop) private var keepOnTop = false
-    @AppStorage(Key.enabled) private var enabled = true
 
-    private let groups: [[Pane]] = [[.general], [.corners, .buttons, .titlebar], [.apps, .status]]
+    static let width: CGFloat = 680
 
     var body: some View {
-        NavigationSplitView {
-            List(selection: $selection) {
-                if search.isEmpty {
-                    AccountRow(enabled: enabled).tag(Pane.about)
-                }
-                ForEach(groups.indices, id: \.self) { i in
-                    let panes = groups[i].filter(matches)
-                    if !panes.isEmpty {
-                        Section {
-                            ForEach(panes) { pane in
-                                Label {
-                                    Text(pane.title)
-                                } icon: {
-                                    SettingsIcon(symbol: pane.symbol, color: pane.color)
-                                }
-                                .tag(pane)
-                            }
-                        }
-                    }
-                }
+        Group {
+            if let pane = current {
+                detail(for: pane)
+                    .frame(width: Self.width, height: 600)
+            } else {
+                IconGrid(search: search, open: open)
+                    .frame(width: Self.width)
             }
-            .searchable(text: $search, placement: .sidebar, prompt: "Ara")
-            .navigationSplitViewColumnWidth(min: 210, ideal: 220, max: 260)
-        } detail: {
-            detail(for: selection ?? .general)
-                .id(selection)
-                .navigationTitle((selection ?? .general).title)
-                .toolbar {
-                    ToolbarItemGroup(placement: .navigation) {
-                        Button("Geri", systemImage: "chevron.left") { step(-1) }.disabled(position == 0)
-                        Button("İleri", systemImage: "chevron.right") { step(1) }.disabled(position >= history.count - 1)
-                    }
-                }
         }
-        .onChange(of: selection) { _, new in
-            guard let new else { return }
-            if navigatingHistory {
-                navigatingHistory = false
-                return
+        .navigationTitle(current?.title ?? "MacTweak")
+        .toolbar {
+            ToolbarItemGroup(placement: .navigation) {
+                Button("Geri", systemImage: "chevron.left") { step(-1) }.disabled(position == 0)
+                Button("İleri", systemImage: "chevron.right") { step(1) }.disabled(position >= history.count - 1)
+                Button("Tümünü Göster", systemImage: "square.grid.3x3.fill") { open(nil) }
             }
-            history = Array(history.prefix(position + 1)) + [new]
-            position = history.count - 1
+        }
+        .searchable(text: $search, placement: .toolbar, prompt: "Ara")
+        .onSubmit(of: .search) {
+            // Enter opens the first matching pane, like System Preferences.
+            if let first = Pane.allCases.first(where: { $0.matches(search) }) { open(first) }
         }
         .background(WindowAccessor { $0.level = keepOnTop ? .floating : .normal })
         .onChange(of: keepOnTop) { _, on in NSApp.windows.forEach { $0.level = on ? .floating : .normal } }
@@ -97,7 +74,7 @@ struct RootView: View {
     @ViewBuilder
     private func detail(for pane: Pane) -> some View {
         switch pane {
-        case .general: GeneralPane(open: { selection = $0 })
+        case .general: GeneralPane(open: { open($0) })
         case .corners: CornersPane()
         case .buttons: ButtonsPane()
         case .titlebar: TitlebarPane()
@@ -107,34 +84,102 @@ struct RootView: View {
         }
     }
 
-    private func matches(_ pane: Pane) -> Bool {
-        search.isEmpty || pane.title.localizedCaseInsensitiveContains(search)
-            || pane.summary.localizedCaseInsensitiveContains(search)
+    private func open(_ pane: Pane?) {
+        guard pane != current else { return }
+        history = Array(history.prefix(position + 1)) + [pane]
+        position = history.count - 1
+        current = pane
+        if pane != nil { search = "" }
     }
 
     private func step(_ delta: Int) {
         let target = position + delta
         guard history.indices.contains(target) else { return }
         position = target
-        navigatingHistory = true
-        selection = history[target]
+        current = history[target]
     }
 }
 
-/// The account-style row at the top of the sidebar.
-struct AccountRow: View {
-    let enabled: Bool
+extension Pane {
+    func matches(_ text: String) -> Bool {
+        text.isEmpty || title.localizedCaseInsensitiveContains(text) || summary.localizedCaseInsensitiveContains(text)
+    }
+}
+
+/// "Show All": the logo band at the top, then bands of large icons.
+struct IconGrid: View {
+    let search: String
+    let open: (Pane) -> Void
+    @AppStorage(Key.enabled) private var enabled = true
+
+    private let bands: [[Pane]] = [[.general, .corners, .buttons, .titlebar], [.apps]]
 
     var body: some View {
-        HStack(spacing: 10) {
-            Image(nsImage: NSApp.applicationIconImage)
-                .resizable()
-                .frame(width: 36, height: 36)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("MacTweak").font(.headline)
-                Text(enabled ? "Etkin" : "Kapalı").font(.caption).foregroundStyle(.secondary)
+        VStack(spacing: 0) {
+            // Logo band, like the account row of System Preferences
+            HStack(alignment: .center, spacing: 18) {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 92, height: 92)
+                    .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("MacTweak").font(.system(size: 26, weight: .regular))
+                    Text("Pencere ayarları · \(enabled ? "Etkin" : "Kapalı")")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                GridIcon(pane: .status, dimmed: !Pane.status.matches(search), open: open)
+                GridIcon(pane: .about, dimmed: !Pane.about.matches(search), open: open)
+            }
+            .padding(.horizontal, 28)
+            .padding(.vertical, 22)
+            .background(Color(nsColor: .windowBackgroundColor))
+
+            ForEach(bands.indices, id: \.self) { i in
+                Divider()
+                HStack(alignment: .top, spacing: 0) {
+                    ForEach(bands[i]) { pane in
+                        GridIcon(pane: pane, dimmed: !pane.matches(search), open: open)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(i.isMultiple(of: 2) ? Color.primary.opacity(0.045) : Color.clear)
             }
         }
-        .padding(.vertical, 4)
+    }
+}
+
+/// One icon in the grid: large artwork with a two-line label underneath.
+struct GridIcon: View {
+    let pane: Pane
+    var dimmed = false
+    let open: (Pane) -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button { open(pane) } label: {
+            VStack(spacing: 6) {
+                PaneIcon(pane: pane, size: 52)
+                    .scaleEffect(hovering ? 1.06 : 1)
+                Text(pane.title)
+                    .font(.system(size: 12))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2, reservesSpace: true)
+                    .foregroundStyle(.primary)
+            }
+            .frame(width: 88)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .opacity(dimmed ? 0.25 : 1)
+        .animation(.easeOut(duration: 0.12), value: hovering)
+        .animation(.easeOut(duration: 0.15), value: dimmed)
+        .onHover { hovering = $0 }
+        .help(pane.summary)
     }
 }
