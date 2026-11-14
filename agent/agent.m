@@ -14,6 +14,7 @@
 #include <notify.h>
 #include <sys/stat.h>
 #include <sys/sysctl.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "../core/shared.h"
@@ -204,7 +205,23 @@ static void install_core(void) {
     logf_(@"core updated: %@", g_core_path);
 }
 
+// The core only loads when SIP is off and AMFI is told to step aside. On a Mac
+// where either is still on, leave the environment alone instead of half-working.
+static BOOL injection_possible(void) {
+    NSString *sip = run(@"/usr/bin/csrutil", @[ @"status" ]);
+    char args[1024] = {0};
+    size_t len = sizeof args - 1;
+    BOOL amfi_off = sysctlbyname("kern.bootargs", args, &len, NULL, 0) == 0 && strstr(args, "amfi_get_out_of_my_way=1");
+    return [sip containsString:@"disabled"] && amfi_off;
+}
+
 static void set_environment(BOOL enabled) {
+    static int possible = -1;
+    if (possible < 0) {
+        possible = injection_possible();
+        if (!possible) logf_(@"SIP or AMFI is on: not loading the core into apps");
+    }
+    if (!possible) enabled = NO;
     NSString *current = run(@"/bin/launchctl", @[ @"getenv", @"DYLD_INSERT_LIBRARIES" ]);
     NSMutableArray *parts = [NSMutableArray array];
     for (NSString *p in [current componentsSeparatedByString:@":"])

@@ -440,7 +440,7 @@ struct StatusPane: View {
             Section {
                 StatusRow(title: "System Integrity Protection (SIP)", ok: info.sip, yes: "Off", no: "On", relaxed: true,
                           info: "Must be off so MacTweak can load into other apps. It can only be changed in Recovery Mode.")
-                StatusRow(title: "AMFI denetimi", ok: info.amfi, yes: "Off", no: "On", relaxed: true,
+                StatusRow(title: "AMFI checks", ok: info.amfi, yes: "Off", no: "On", relaxed: true,
                           info: "Must be off so the library can load into signed apps (boot-args).")
                 StatusRow(title: "FileVault", ok: info.fileVault, yes: "On", no: "Off",
                           info: "Disk encryption. Unrelated to MacTweak; keeping it on is recommended.")
