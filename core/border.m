@@ -9,17 +9,17 @@
 // are put back (alpha, shadow), never an app's own settings.
 //
 // The window server draws a rim with the shadow: a dark line outside the window
-// and, with Increase Contrast, a white line about 2 pt wide just inside it. The
-// inner line covers half of a 2 pt border, so a window that has our border gets
-// its inner rim turned off through -[NSWindow shadowParameters] (the shadow and
-// the outer line stay).
+// and, with Increase Contrast, a white line about 2 pt wide just inside it.
+// AppKit sends their strength with the shadow in -[NSWindow shadowParameters];
+// the user's outline and shadow settings scale those values. The inner line
+// covers half of a 2 pt border, so it is always off under our border.
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "internal.h"
 
-static char kBorderView, kDimmed, kShadowOff, kInnerRimOff;
+static char kBorderView, kDimmed, kShadowOff, kShadowParts;
 
 static CGRect rect_of(id o, const char *selector) {
 #if defined(__x86_64__)
@@ -112,9 +112,16 @@ void mt_border_update(id w) {
         });
     }
 
-    // Inner rim of the shadow: off while our border is on this window.
-    if (show != flag(w, &kInnerRimOff)) {
-        set_flag(w, &kInnerRimOff, show);
+    // Outline and shadow: the parts the window server should use for this window.
+    uint64_t o = (titled && !fullscreen) ? mt_outline() : 0;
+    uint64_t parts = o ? (o & 0xFFFFFFFFULL) : MT_OUTLINE_DEFAULT;
+    if (show) parts &= ~(0xFFULL << (8 * MT_O_INNER));  // inner line off under our border
+    id stored = objc_getAssociatedObject(w, &kShadowParts);
+    uint64_t old = stored ? ((unsigned long long (*)(id, SEL))objc_msgSend)(stored, SEL_("unsignedLongLongValue")) : MT_OUTLINE_DEFAULT;
+    if (parts != old) {
+        id num = parts == MT_OUTLINE_DEFAULT ? nil
+                     : ((id(*)(id, SEL, unsigned long long))objc_msgSend)(CLASS("NSNumber"), SEL_("numberWithUnsignedLongLong:"), parts);
+        objc_setAssociatedObject(w, &kShadowParts, num, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         if (RESPONDS(w, "_setShadowParameters")) MSG_VOID(w, "_setShadowParameters");
         MSG_VOID(w, "invalidateShadow");
     }
@@ -156,13 +163,32 @@ void mt_border_install(void) {
     });
     orig_shadow_params = mt_hook(window, "shadowParameters", ^id(id self) {
         id params = ((id(*)(id, SEL))orig_shadow_params)(self, SEL_("shadowParameters"));
-        if (!params || !flag(self, &kInnerRimOff)) return params;
+        id stored = objc_getAssociatedObject(self, &kShadowParts);
+        if (!params || !stored) return params;
+        uint64_t parts = ((unsigned long long (*)(id, SEL))objc_msgSend)(stored, SEL_("unsignedLongLongValue"));
+        static const struct { const char *key; int part; bool density; } kKeys[] = {
+            {"com.apple.WindowShadowRimDensityActive", MT_O_OUTER, true},
+            {"com.apple.WindowShadowRimDensityInactive", MT_O_OUTER, true},
+            {"com.apple.WindowShadowInnerRimDensityActive", MT_O_INNER, true},
+            {"com.apple.WindowShadowInnerRimDensityInactive", MT_O_INNER, true},
+            {"com.apple.WindowShadowDensityActive", MT_O_STRENGTH, true},
+            {"com.apple.WindowShadowDensityInactive", MT_O_STRENGTH, true},
+            {"com.apple.WindowShadowRadiusActive", MT_O_SIZE, false},
+            {"com.apple.WindowShadowRadiusInactive", MT_O_SIZE, false},
+            {"com.apple.WindowShadowVerticalOffsetActive", MT_O_SIZE, false},
+            {"com.apple.WindowShadowVerticalOffsetInactive", MT_O_SIZE, false},
+        };
         typedef id __attribute__((ns_returns_retained)) (*copy_fn)(id, SEL);
         id copy = ((copy_fn)objc_msgSend)(params, SEL_("mutableCopy"));
-        id zero = ((id(*)(id, SEL, double))objc_msgSend)(CLASS("NSNumber"), SEL_("numberWithDouble:"), 0.0);
-        const char *keys[] = {"com.apple.WindowShadowInnerRimDensityActive", "com.apple.WindowShadowInnerRimDensityInactive"};
-        for (int i = 0; i < 2; i++)
-            ((void (*)(id, SEL, id, id))objc_msgSend)(copy, SEL_("setObject:forKey:"), zero, nsstring(keys[i]));
+        for (size_t i = 0; i < sizeof kKeys / sizeof kKeys[0]; i++) {
+            id key = nsstring(kKeys[i].key);
+            id value = ((id(*)(id, SEL, id))objc_msgSend)(copy, SEL_("objectForKey:"), key);
+            if (!value) continue;
+            double v = ((double (*)(id, SEL))objc_msgSend)(value, SEL_("doubleValue")) * mt_outline_part(parts, kKeys[i].part) / 100.0;
+            if (kKeys[i].density && v > 1) v = 1;
+            ((void (*)(id, SEL, id, id))objc_msgSend)(
+                copy, SEL_("setObject:forKey:"), ((id(*)(id, SEL, double))objc_msgSend)(CLASS("NSNumber"), SEL_("numberWithDouble:"), v), key);
+        }
         return copy;
     });
     // Windows shown without becoming key never pass through the two above.

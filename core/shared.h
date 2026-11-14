@@ -22,6 +22,7 @@
 #define MT_N_RELOAD MT_DOMAIN ".reload"
 // Border, window opacity and shadow settings (see the layout below).
 #define MT_N_BORDER MT_DOMAIN ".border"
+#define MT_N_OUTLINE MT_DOMAIN ".outline"
 
 // --- Global state (uint64) ---
 // bits 0-7   : magic byte; missing means the agent is not running and the core touches nothing
@@ -53,6 +54,18 @@
 #define MT_B_ENABLED (1ULL << 40)
 #define MT_B_ACTIVE_ONLY (1ULL << 41)
 #define MT_B_NO_SHADOW (1ULL << 42)
+
+// --- Outline and shadow state (uint64, MT_N_OUTLINE) ---
+// Each part is a percentage of the macOS value, 100 = unchanged:
+// bits 0-7   : outer line (the dark rim the window server draws around a window)
+// bits 8-15  : inner line (the light rim just inside it, drawn with Increase Contrast)
+// bits 16-23 : shadow strength
+// bits 24-31 : shadow size (blur radius and offset)
+// bits 56-63 : MT_OUTLINE_MAGIC (0 = no agent: leave the window server alone)
+#define MT_OUTLINE_MAGIC 0x5DULL
+#define MT_OUTLINE_DEFAULT (100ULL | 100ULL << 8 | 100ULL << 16 | 100ULL << 24)
+enum { MT_O_OUTER = 0, MT_O_INNER = 1, MT_O_STRENGTH = 2, MT_O_SIZE = 3 };
+static inline int mt_outline_part(uint64_t o, int part) { return (int)((o >> (8 * part)) & 0xFF); }
 
 static inline int mt_button_spacing(uint64_t s) { return (int)((s >> 48) & 0xFF) - 64; }
 static inline double mt_border_width(uint64_t b) { return (double)((b >> 32) & 0xFF) / 4.0; }

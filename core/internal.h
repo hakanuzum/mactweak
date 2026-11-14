@@ -50,6 +50,7 @@ bool mt_flag(uint64_t bit);                       // enabled and the bit is set 
 bool mt_target_radius(double *top, double *bottom);  // true when the corner radius should change
 uint64_t mt_settings(void);                       // raw global state
 uint64_t mt_border(void);                         // border state (0 when MacTweak is off for this app)
+uint64_t mt_outline(void);                        // outline and shadow state (0 = leave alone)
 
 // Modules: each installs its hooks once.
 void mt_corners_install(void);   // corners.m

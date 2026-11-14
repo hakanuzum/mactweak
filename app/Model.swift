@@ -24,6 +24,10 @@ enum Key {
     static let borderActiveOnly = "borderActiveOnly"
     static let inactiveOpacity = "inactiveOpacity"
     static let windowShadow = "windowShadow"
+    static let outlineOuter = "outlineOuter"
+    static let outlineInner = "outlineInner"
+    static let shadowStrength = "shadowStrength"
+    static let shadowSize = "shadowSize"
 }
 
 enum Notify {

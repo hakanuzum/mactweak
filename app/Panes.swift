@@ -242,6 +242,10 @@ struct BorderPane: View {
     @AppStorage(Key.borderActiveOnly) private var activeOnly = true
     @AppStorage(Key.inactiveOpacity) private var inactiveOpacity = 100.0
     @AppStorage(Key.windowShadow) private var shadow = true
+    @AppStorage(Key.outlineOuter) private var outer = 100.0
+    @AppStorage(Key.outlineInner) private var inner = 100.0
+    @AppStorage(Key.shadowStrength) private var shadowStrength = 100.0
+    @AppStorage(Key.shadowSize) private var shadowSize = 100.0
 
     private let presets = ["#E2A100FF", "#17191CFF", "#8E8E93FF", "#FF5F57FF", "#0A84FFFF", "#28C840FF", "#BF5AF2FF"]
 
@@ -300,11 +304,43 @@ struct BorderPane: View {
             } footer: {
                 Text("Windows you are not using fade, so the active one stands out.")
             }
-            Section("Shadow") {
+            Section {
+                PercentRow(title: "Outer line", value: $outer, range: 0...150)
+                PercentRow(title: "Inner line", value: $inner, range: 0...150)
+            } header: {
+                Text("macOS outline")
+            } footer: {
+                Text("macOS draws a thin line around every window: a dark one outside and, with Increase Contrast, a light one just inside. Under a MacTweak border the inside line is always off, so the border shows at its full width.")
+            }
+            Section {
                 Toggle("Window shadows", isOn: $shadow)
+                PercentRow(title: "Strength", value: $shadowStrength, range: 0...200).disabled(!shadow)
+                PercentRow(title: "Size", value: $shadowSize, range: 25...200).disabled(!shadow)
+            } header: {
+                Text("Shadow")
+            } footer: {
+                Text("macOS draws the outline together with the shadow, so turning shadows off removes the outline too. For no shadow but a visible outline, set Strength to Off.")
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+/// Slider for a percentage of a macOS value: 100 is the system value, 0 is off.
+struct PercentRow: View {
+    let title: String
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+
+    var body: some View {
+        LabeledContent(title) {
+            HStack {
+                Slider(value: $value, in: range, step: 5)
+                Text(value == 100 ? "System" : value == 0 ? "Off" : String(format: "%.0f%%", value))
+                    .monospacedDigit().frame(width: 52, alignment: .trailing)
+                Button("Reset") { value = 100 }.disabled(value == 100)
+            }
+        }
     }
 }
 

@@ -21,7 +21,7 @@
 
 static NSString *const kDomain = @MT_DOMAIN;
 static NSString *const kCoreName = @"libmactweak.dylib";
-static int g_settings_token = -1, g_border_token = -1;
+static int g_settings_token = -1, g_border_token = -1, g_outline_token = -1;
 static NSMutableDictionary<NSString *, NSNumber *> *g_app_tokens;
 static NSString *g_core_path;  // installed core
 static NSDate *g_started;
@@ -114,6 +114,14 @@ static uint64_t border_state(void) {
     return b;
 }
 
+static uint64_t outline_state(void) {
+    NSString *keys[] = {@"outlineOuter", @"outlineInner", @"shadowStrength", @"shadowSize"};
+    const double max[] = {150, 150, 200, 200};
+    uint64_t o = MT_OUTLINE_MAGIC << 56;
+    for (int i = 0; i < 4; i++) o |= (uint64_t)lround(fmax(0, fmin(max[i], pref_double(keys[i], 100)))) << (8 * i);
+    return o;
+}
+
 static NSDictionary<NSString *, NSNumber *> *app_states(void) {
     NSMutableDictionary *s = [NSMutableDictionary dictionary];
     id excluded = pref(@"excludedApps");
@@ -141,6 +149,8 @@ static void write_states(void) {
     notify_set_state(g_settings_token, global);
     if (g_border_token < 0) notify_register_check(MT_N_BORDER, &g_border_token);
     notify_set_state(g_border_token, border_state());
+    if (g_outline_token < 0) notify_register_check(MT_N_OUTLINE, &g_outline_token);
+    notify_set_state(g_outline_token, outline_state());
 
     NSDictionary *wanted = app_states();
     for (NSString *k in g_app_tokens.allKeys) {
@@ -408,6 +418,7 @@ int main(void) {
         dispatch_source_set_event_handler(g_sigterm, ^{
             if (g_settings_token >= 0) notify_set_state(g_settings_token, 0);
             if (g_border_token >= 0) notify_set_state(g_border_token, 0);
+            if (g_outline_token >= 0) notify_set_state(g_outline_token, 0);
             notify_post(MT_N_SETTINGS);
             exit(0);
         });

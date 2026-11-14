@@ -40,21 +40,24 @@ IMP mt_hook(Class cls, const char *selector, id block) {
 // ---------------------------------------------------------------------------
 // Settings state
 
-static int g_settings_token = -1, g_app_token = -1, g_border_token = -1, g_alive_token = -1, g_listen_token = -1;
-static uint64_t g_settings = 0, g_app = 0, g_border = 0;
+static int g_settings_token = -1, g_app_token = -1, g_border_token = -1, g_outline_token = -1, g_alive_token = -1,
+           g_listen_token = -1;
+static uint64_t g_settings = 0, g_app = 0, g_border = 0, g_outline = 0;
 static bool g_inert = false;  // never touch this process (not an app, or a system UI process)
 static dispatch_once_t g_ready_once;
 
 static void refresh_windows(void);
 
 static void read_state(void) {
-    uint64_t s = 0, a = 0, b = 0;
+    uint64_t s = 0, a = 0, b = 0, o = 0;
     if (g_settings_token >= 0) notify_get_state(g_settings_token, &s);
     if (g_app_token >= 0) notify_get_state(g_app_token, &a);
     if (g_border_token >= 0) notify_get_state(g_border_token, &b);
+    if (g_outline_token >= 0) notify_get_state(g_outline_token, &o);
     g_settings = ((s & 0xFF) == MT_MAGIC) ? s : 0;  // no agent: everything stays macOS default
     g_app = a;
     g_border = g_settings ? b : 0;
+    g_outline = (g_settings && (o >> 56) == MT_OUTLINE_MAGIC) ? o : 0;
 }
 
 // MACTWEAK_NOTIFY_SUFFIX gives a process its own set of notify names, so tests
@@ -87,6 +90,8 @@ static void prepare_state(void) {
         notify_register_check(name, &g_settings_token);
         notify_name(name, sizeof name, MT_N_BORDER, NULL);
         notify_register_check(name, &g_border_token);
+        notify_name(name, sizeof name, MT_N_OUTLINE, NULL);
+        notify_register_check(name, &g_outline_token);
         if (bundle_id) {
             notify_name(name, sizeof name, MT_N_APP_PREFIX, bundle_id);
             notify_register_check(name, &g_app_token);
@@ -131,6 +136,8 @@ bool mt_flag(uint64_t bit) { return mt_enabled() && (g_settings & bit); }
 uint64_t mt_settings(void) { return g_settings; }
 
 uint64_t mt_border(void) { return mt_enabled() ? g_border : 0; }
+
+uint64_t mt_outline(void) { return mt_enabled() ? g_outline : 0; }
 
 // ---------------------------------------------------------------------------
 // Redraw open windows with the new settings
