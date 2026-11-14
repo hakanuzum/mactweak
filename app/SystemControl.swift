@@ -89,11 +89,15 @@ enum SystemControl {
 
     // MARK: Running apps
 
-    enum LoadState { case active, inert, missing }
+    enum LoadState { case active, outdated, inert, missing }
+
+    /// Build stamp of the core this app ships (build.sh writes it into Info.plist).
+    static let coreBuild = (Bundle.main.object(forInfoDictionaryKey: "MTCoreBuild") as? Int).map(UInt64.init) ?? 0
 
     static func loadState(_ pid: pid_t) -> LoadState {
-        switch Notify.state(Notify.alivePrefix + String(pid)) {
-        case 1: return .active
+        let s = Notify.state(Notify.alivePrefix + String(pid))
+        switch s & 0xFF {
+        case 1: return (s >> 8) == coreBuild ? .active : .outdated
         case 2: return .inert
         default: return .missing
         }

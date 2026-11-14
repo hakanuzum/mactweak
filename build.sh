@@ -13,6 +13,9 @@ rm -rf build
 mkdir -p "$C/MacOS" "$C/Frameworks" "$C/Resources" build/tmp
 
 WARN="-Wall -Wextra -Wno-unused-parameter"
+# Build stamp: the core writes it into every app it loads into, so the settings
+# app can tell which running apps still use an older core.
+BUILD_STAMP=$(date +%s)
 
 echo "› button themes (assets/button-themes)"
 xcrun swiftc -O tools/pack_button_themes.swift -o build/tmp/pack-button-themes
@@ -21,7 +24,7 @@ build/tmp/pack-button-themes assets/button-themes build/tmp/button_themes.c buil
 echo "› core (libmactweak.dylib)"
 # Deliberately links no frameworks: it is also injected into command line tools and does nothing there.
 # arm64e: Apple's own apps; x86_64: apps running under Rosetta.
-xcrun clang -fobjc-arc -Os $WARN -dynamiclib -arch arm64 -arch arm64e -arch x86_64 \
+xcrun clang -fobjc-arc -Os $WARN -DMT_BUILD=$BUILD_STAMP -dynamiclib -arch arm64 -arch arm64e -arch x86_64 \
     -mmacosx-version-min=$TARGET -Wl,-dead_strip_dylibs -install_name @rpath/libmactweak.dylib \
     -Icore core/core.m core/corners.m core/titlebar.m core/buttons.m core/border.m build/tmp/button_themes.c \
     -o "$C/Frameworks/libmactweak.dylib" 2>&1 | grep -v 'arm64e.*ABI' || true
@@ -61,6 +64,7 @@ mkdir -p "$C/Resources/Icons"
 cp assets/icons/*.svg "$C/Resources/Icons/"
 cp -R build/tmp/ButtonThemes "$C/Resources/ButtonThemes"
 cp app/Info.plist "$C/Info.plist"
+/usr/libexec/PlistBuddy -c "Add :MTCoreBuild integer $BUILD_STAMP" "$C/Info.plist"
 
 echo "› ad-hoc signature"
 codesign --force --sign - "$C/Frameworks/libmactweak.dylib"

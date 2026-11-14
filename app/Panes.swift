@@ -466,6 +466,13 @@ struct StatusPane: View {
                         Spacer()
                         switch SystemControl.loadState(app.processIdentifier) {
                         case .active: Text("Active").foregroundStyle(.green)
+                        case .outdated:
+                            if relaunching.contains(app.processIdentifier) {
+                                ProgressView().controlSize(.small)
+                            } else {
+                                Text("Outdated").foregroundStyle(.orange)
+                                Button("Relaunch") { relaunch(app) }
+                            }
                         case .inert: Text("System window").foregroundStyle(.secondary)
                         case .missing:
                             if relaunching.contains(app.processIdentifier) {
@@ -485,7 +492,7 @@ struct StatusPane: View {
                         .buttonStyle(.borderless)
                 }
             } footer: {
-                Text("MacTweak loads into apps opened after the agent started. Relaunch the ones that were already open.")
+                Text("MacTweak loads into apps opened after the agent started. Apps opened before, or before the last MacTweak update, keep the old behavior until they are relaunched.")
             }
         }
         .formStyle(.grouped)

@@ -16,6 +16,7 @@
 // Per-app state: MT_N_APP_PREFIX + bundle identifier.
 #define MT_N_APP_PREFIX MT_DOMAIN ".app."
 // Set by the core once loaded into a process: MT_N_ALIVE_PREFIX + pid.
+// State: bits 0-7 = 1 active / 2 inert, bits 8-63 = the core's build stamp.
 #define MT_N_ALIVE_PREFIX MT_DOMAIN ".alive."
 // Posted by the settings app when preferences change; the agent re-reads them.
 #define MT_N_RELOAD MT_DOMAIN ".reload"

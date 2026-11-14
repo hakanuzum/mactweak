@@ -18,6 +18,10 @@
 
 #include "internal.h"
 
+#ifndef MT_BUILD
+#define MT_BUILD 0
+#endif
+
 // ---------------------------------------------------------------------------
 // Hooking
 
@@ -90,7 +94,7 @@ static void prepare_state(void) {
         char alive[96];
         snprintf(alive, sizeof alive, "%s%d", MT_N_ALIVE_PREFIX, getpid());
         if (notify_register_check(alive, &g_alive_token) == NOTIFY_STATUS_OK)
-            notify_set_state(g_alive_token, g_inert ? 2 : 1);
+            notify_set_state(g_alive_token, (uint64_t)(g_inert ? 2 : 1) | ((uint64_t)MT_BUILD << 8));
         read_state();
         notify_name(name, sizeof name, MT_N_SETTINGS, NULL);
         if (!g_inert)
