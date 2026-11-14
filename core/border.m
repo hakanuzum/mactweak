@@ -2,11 +2,13 @@
 // and window shadows. Updated when a window is ordered on screen and when the
 // key window changes:
 //   -[NSWindow orderWindow:relativeTo:], -[NSWindow becomeKeyWindow], -[NSWindow resignKeyWindow]
-// The border is drawn by a transparent view on top of the window frame (the
-// frame view is not always layer-backed on macOS 27, so a bare sublayer has
-// nowhere to go). The view ignores clicks and takes the window's corner radius,
-// so it sits exactly inside the window's mask. Only values this module changed
-// are put back (alpha, shadow), never an app's own settings.
+// The border is the window frame view's own layer border: a CALayer draws its
+// border above its sublayers, so it covers the whole window without adding a
+// view. (An earlier version put a border view on top of the frame; AppKit then
+// laid out SwiftUI toolbars differently and the tab capsule of Settings windows
+// grew taller.) The frame view gets its layer when the window first draws, so a
+// window without one is retried shortly after. Only values this module changed
+// are put back (border, alpha, shadow), never an app's own settings.
 //
 // The window server draws a rim with the shadow: a dark line outside the window
 // and, with Increase Contrast, a white line about 2 pt wide just inside it.
@@ -16,18 +18,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <dispatch/dispatch.h>
 
 #include "internal.h"
 
-static char kBorderView, kDimmed, kShadowOff, kShadowParts;
-
-static CGRect rect_of(id o, const char *selector) {
-#if defined(__x86_64__)
-    return ((CGRect(*)(id, SEL))objc_msgSend_stret)(o, SEL_(selector));
-#else
-    return ((CGRect(*)(id, SEL))objc_msgSend)(o, SEL_(selector));
-#endif
-}
+static char kBorderOn, kSavedRadius, kRetried, kDimmed, kShadowOff, kShadowParts;
 
 static bool flag(id w, const void *key) { return objc_getAssociatedObject(w, key) != nil; }
 static void set_flag(id w, const void *key, bool on) {
@@ -40,38 +35,15 @@ static id nsstring(const char *s) {
     return ((id(*)(id, SEL, const char *))objc_msgSend)(CLASS("NSString"), SEL_("stringWithUTF8String:"), s);
 }
 
+static double get_double(id o, const char *sel) { return ((double (*)(id, SEL))objc_msgSend)(o, SEL_(sel)); }
+static void set_double(id o, const char *sel, double v) { ((void (*)(id, SEL, double))objc_msgSend)(o, SEL_(sel), v); }
+
 static void without_animation(void (^block)(void)) {
     id tx = CLASS("CATransaction");
     MSG_VOID(tx, "begin");
     ((void (*)(id, SEL, BOOL))objc_msgSend)(tx, SEL_("setDisableActions:"), YES);
     block();
     MSG_VOID(tx, "commit");
-}
-
-// NSView subclass made at runtime whose -hitTest: returns nil, so clicks pass through.
-static Class border_view_class(void) {
-    static Class cls;
-    if (!cls) {
-        cls = objc_allocateClassPair(objc_getClass("NSView"), "MTBorderView", 0);
-        if (cls) {
-            class_addMethod(cls, SEL_("hitTest:"), imp_implementationWithBlock(^id(id self, CGPoint p) { return nil; }),
-                            "@@:{CGPoint=dd}");
-            objc_registerClassPair(cls);
-        } else {
-            cls = objc_getClass("MTBorderView");
-        }
-    }
-    return cls;
-}
-
-static id make_border_view(CGRect bounds) {
-    typedef id __attribute__((ns_returns_retained)) (*alloc_fn)(id, SEL);
-    typedef id __attribute__((ns_returns_retained)) (*init_fn)(__attribute__((ns_consumed)) id, SEL, CGRect);
-    id v = ((init_fn)objc_msgSend)(((alloc_fn)objc_msgSend)((id)border_view_class(), SEL_("alloc")),
-                                   SEL_("initWithFrame:"), bounds);
-    MSG_SET_BOOL(v, "setWantsLayer:", YES);
-    ((void (*)(id, SEL, unsigned long))objc_msgSend)(v, SEL_("setAutoresizingMask:"), 2 | 16);  // width + height sizable
-    return v;
 }
 
 void mt_border_update(id w) {
@@ -83,32 +55,41 @@ void mt_border_update(id w) {
 
     // Border
     id frame = MSG(MSG(w, "contentView"), "superview");
-    id view = objc_getAssociatedObject(w, &kBorderView);
+    id layer = MSG(frame, "layer");
     bool show = frame && (b & MT_B_ENABLED) && mt_border_width(b) > 0 && (key || !(b & MT_B_ACTIVE_ONLY));
     if (getenv("MACTWEAK_LOG"))
-        fprintf(stderr, "[mactweak] border: state=0x%llx key=%d show=%d\n", b, key, show);
-    if (show && !view) {
-        view = make_border_view(rect_of(frame, "bounds"));
-        objc_setAssociatedObject(w, &kBorderView, view, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        fprintf(stderr, "[mactweak] border: state=0x%llx key=%d show=%d layer=%d\n", b, key, show, layer != nil);
+    if (show && !layer && !flag(w, &kRetried)) {
+        set_flag(w, &kRetried, true);
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 150 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+            mt_border_update(w);
+        });
     }
-    if (view) {
+    if (layer && (show || flag(w, &kBorderOn))) {
         without_animation(^{
-            MSG_SET_BOOL(view, "setHidden:", !show);
-            if (!show) return;
-            // Keep it the frame's topmost subview (AppKit may add views later).
-            if (MSG(view, "superview") != frame || MSG(MSG(frame, "subviews"), "lastObject") != view)
-                ((void (*)(id, SEL, id, long, id))objc_msgSend)(frame, SEL_("addSubview:positioned:relativeTo:"), view,
-                                                                1 /* above */, nil);
-            ((void (*)(id, SEL, CGRect))objc_msgSend)(view, SEL_("setFrame:"), rect_of(frame, "bounds"));
-            id layer = MSG(view, "layer");
-            double radius = RESPONDS(w, "_cornerRadius") ? ((double (*)(id, SEL))objc_msgSend)(w, SEL_("_cornerRadius")) : 0;
-            ((void (*)(id, SEL, double))objc_msgSend)(layer, SEL_("setCornerRadius:"), radius);
-            ((void (*)(id, SEL, double))objc_msgSend)(layer, SEL_("setBorderWidth:"), mt_border_width(b));
-            id color = ((id(*)(id, SEL, double, double, double, double))objc_msgSend)(
-                CLASS("NSColor"), SEL_("colorWithSRGBRed:green:blue:alpha:"), (double)(b & 0xFF) / 255.0,
-                (double)((b >> 8) & 0xFF) / 255.0, (double)((b >> 16) & 0xFF) / 255.0, (double)((b >> 24) & 0xFF) / 255.0);
-            void *cg = ((void *(*)(id, SEL))objc_msgSend)(color, SEL_("CGColor"));
-            ((void (*)(id, SEL, void *))objc_msgSend)(layer, SEL_("setBorderColor:"), cg);
+            if (show) {
+                double radius = RESPONDS(w, "_cornerRadius") ? get_double(w, "_cornerRadius") : 0;
+                if (!objc_getAssociatedObject(w, &kSavedRadius))
+                    objc_setAssociatedObject(w, &kSavedRadius,
+                                             ((id(*)(id, SEL, double))objc_msgSend)(CLASS("NSNumber"), SEL_("numberWithDouble:"),
+                                                                                    get_double(layer, "cornerRadius")),
+                                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+                set_double(layer, "setCornerRadius:", radius);
+                set_double(layer, "setBorderWidth:", mt_border_width(b));
+                id color = ((id(*)(id, SEL, double, double, double, double))objc_msgSend)(
+                    CLASS("NSColor"), SEL_("colorWithSRGBRed:green:blue:alpha:"), (double)(b & 0xFF) / 255.0,
+                    (double)((b >> 8) & 0xFF) / 255.0, (double)((b >> 16) & 0xFF) / 255.0, (double)((b >> 24) & 0xFF) / 255.0);
+                ((void (*)(id, SEL, void *))objc_msgSend)(layer, SEL_("setBorderColor:"),
+                                                         ((void *(*)(id, SEL))objc_msgSend)(color, SEL_("CGColor")));
+                set_flag(w, &kBorderOn, true);
+            } else {
+                set_double(layer, "setBorderWidth:", 0);
+                ((void (*)(id, SEL, void *))objc_msgSend)(layer, SEL_("setBorderColor:"), NULL);
+                id saved = objc_getAssociatedObject(w, &kSavedRadius);
+                if (saved) set_double(layer, "setCornerRadius:", get_double(saved, "doubleValue"));
+                objc_setAssociatedObject(w, &kSavedRadius, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+                set_flag(w, &kBorderOn, false);
+            }
         });
     }
 
