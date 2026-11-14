@@ -7,13 +7,19 @@
 // nowhere to go). The view ignores clicks and takes the window's corner radius,
 // so it sits exactly inside the window's mask. Only values this module changed
 // are put back (alpha, shadow), never an app's own settings.
+//
+// The window server draws a rim with the shadow: a dark line outside the window
+// and, with Increase Contrast, a white line about 2 pt wide just inside it. The
+// inner line covers half of a 2 pt border, so a window that has our border gets
+// its inner rim turned off through -[NSWindow shadowParameters] (the shadow and
+// the outer line stay).
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "internal.h"
 
-static char kBorderView, kDimmed, kShadowOff;
+static char kBorderView, kDimmed, kShadowOff, kInnerRimOff;
 
 static CGRect rect_of(id o, const char *selector) {
 #if defined(__x86_64__)
@@ -25,7 +31,13 @@ static CGRect rect_of(id o, const char *selector) {
 
 static bool flag(id w, const void *key) { return objc_getAssociatedObject(w, key) != nil; }
 static void set_flag(id w, const void *key, bool on) {
-    objc_setAssociatedObject(w, key, on ? MSG(CLASS("NSNumber"), "new") : nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    // +[NSNumber new] is nil (class cluster), so store a real number.
+    id yes = ((id(*)(id, SEL, BOOL))objc_msgSend)(CLASS("NSNumber"), SEL_("numberWithBool:"), YES);
+    objc_setAssociatedObject(w, key, on ? yes : nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+static id nsstring(const char *s) {
+    return ((id(*)(id, SEL, const char *))objc_msgSend)(CLASS("NSString"), SEL_("stringWithUTF8String:"), s);
 }
 
 static void without_animation(void (^block)(void)) {
@@ -100,6 +112,13 @@ void mt_border_update(id w) {
         });
     }
 
+    // Inner rim of the shadow: off while our border is on this window.
+    if (show != flag(w, &kInnerRimOff)) {
+        set_flag(w, &kInnerRimOff, show);
+        if (RESPONDS(w, "_setShadowParameters")) MSG_VOID(w, "_setShadowParameters");
+        MSG_VOID(w, "invalidateShadow");
+    }
+
     // Background window opacity
     int opacity = mt_inactive_opacity(b);
     bool dim = titled && !fullscreen && !key && opacity > 0 && opacity < 100;
@@ -123,7 +142,7 @@ void mt_border_update(id w) {
     }
 }
 
-static IMP orig_become_key, orig_resign_key, orig_order;
+static IMP orig_become_key, orig_resign_key, orig_order, orig_shadow_params;
 
 void mt_border_install(void) {
     Class window = objc_getClass("NSWindow");
@@ -134,6 +153,17 @@ void mt_border_install(void) {
     orig_resign_key = mt_hook(window, "resignKeyWindow", ^(id self) {
         ((void (*)(id, SEL))orig_resign_key)(self, SEL_("resignKeyWindow"));
         mt_border_update(self);
+    });
+    orig_shadow_params = mt_hook(window, "shadowParameters", ^id(id self) {
+        id params = ((id(*)(id, SEL))orig_shadow_params)(self, SEL_("shadowParameters"));
+        if (!params || !flag(self, &kInnerRimOff)) return params;
+        typedef id __attribute__((ns_returns_retained)) (*copy_fn)(id, SEL);
+        id copy = ((copy_fn)objc_msgSend)(params, SEL_("mutableCopy"));
+        id zero = ((id(*)(id, SEL, double))objc_msgSend)(CLASS("NSNumber"), SEL_("numberWithDouble:"), 0.0);
+        const char *keys[] = {"com.apple.WindowShadowInnerRimDensityActive", "com.apple.WindowShadowInnerRimDensityInactive"};
+        for (int i = 0; i < 2; i++)
+            ((void (*)(id, SEL, id, id))objc_msgSend)(copy, SEL_("setObject:forKey:"), zero, nsstring(keys[i]));
+        return copy;
     });
     // Windows shown without becoming key never pass through the two above.
     orig_order = mt_hook(window, "orderWindow:relativeTo:", ^(id self, long place, long other) {
