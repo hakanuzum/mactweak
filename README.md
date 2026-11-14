@@ -71,5 +71,5 @@ Xcode 27 gerekir (`DEVELOPER_DIR` varsayılanı `/Applications/Xcode.app`).
 
 ## Lisanslar
 
-- `assets/icons/*.svg`: WhiteSur ikon teması (vinceliuice), GPL-3.0 (`assets/WHITESUR-ICONS-GPL-3.0.txt`). Kaynak: github.com/vinceliuice/WhiteSur-icon-theme. Apple logosu içeren ikonlar bilerek seçilmedi. GPL-3.0 yüzünden MacTweak dağıtılacaksa GPL-3.0 uyumlu lisanslanmalı.
+- `assets/icons/*.svg`: WhiteSur ikon teması (vinceliuice), GPL-3.0 (`assets/WHITESUR-ICONS-GPL-3.0.txt`). Kaynak: github.com/vinceliuice/WhiteSur-icon-theme. Apple logosu içeren ikonlar bilerek seçilmedi. Renkleri logoya uysun diye gri tonlamaya çevrildi (`icon/grayscale_icons.py`; yeni ikon eklenince bu betiği ona da çalıştırın). GPL-3.0 yüzünden MacTweak dağıtılacaksa GPL-3.0 uyumlu lisanslanmalı.
 - `assets/hand-*.svg`: Microsoft Fluent Emoji, MIT (`assets/FLUENT-EMOJI-LICENSE`). Uygulama ikonundaki el damgası bunlardan çizilir.
