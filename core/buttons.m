@@ -127,10 +127,10 @@ static void draw_neon(CGRect r, RGB tint, double alpha, double size) {
 }
 
 // Image themes: NSImage per (theme, button, state), made once from the packed PNG bytes.
-static __strong id g_images[16][3][4];
+static __strong id g_images[32][3][4];
 
 static id theme_image(int theme, int button, int state) {
-    if (theme < 0 || theme >= mt_image_theme_count || theme >= 16) return nil;
+    if (theme < 0 || theme >= mt_image_theme_count || theme >= 32) return nil;
     if (!g_images[theme][button][state]) {
         mt_png p = mt_image_themes[theme][button][state];
         if (!p.data) return nil;

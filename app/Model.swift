@@ -17,6 +17,13 @@ enum Key {
     static let autoExcludedApps = "autoExcludedApps"
     static let restartFinderAtLogin = "restartFinderAtLogin"
     static let keepOnTop = "keepOnTop"
+    static let buttonSpacing = "buttonSpacing"
+    static let borderEnabled = "borderEnabled"
+    static let borderWidth = "borderWidth"
+    static let borderColor = "borderColor"
+    static let borderActiveOnly = "borderActiveOnly"
+    static let inactiveOpacity = "inactiveOpacity"
+    static let windowShadow = "windowShadow"
 }
 
 enum Notify {
@@ -64,16 +71,21 @@ struct CornerStyle: Identifiable, Hashable {
 // MARK: - Button themes (same order and colors as core/buttons.m)
 
 struct ButtonTheme: Identifiable, Hashable {
+    enum Source { case builtIn, openSource, kde }
+
     let id: Int
     let name: String
     var folder: String? = nil  // image theme: Resources/ButtonThemes/<folder>
+    var source: Source = .builtIn
+    var downloads: Int? = nil  // KDE Store downloads (2026-11-14)
 
     /// Image of an image theme's button (index 0 close, 1 minimize, 2 zoom) in a state.
     static func image(theme: Int, index: Int, hovering: Bool) -> NSImage? {
         guard let folder = all.first(where: { $0.id == theme })?.folder else { return nil }
         let button = ["close", "min", "max"][index]
-        let url = Bundle.main.url(forResource: "\(button)-\(hovering ? "hover" : "normal")", withExtension: "png",
-                                  subdirectory: "ButtonThemes/\(folder)")
+        let dir = "ButtonThemes/\(folder)"
+        let url = Bundle.main.url(forResource: "\(button)-\(hovering ? "hover" : "normal")", withExtension: "png", subdirectory: dir)
+            ?? Bundle.main.url(forResource: "\(button)-normal", withExtension: "png", subdirectory: dir)
         return url.flatMap(NSImage.init(contentsOf:))
     }
 
@@ -92,12 +104,25 @@ struct ButtonTheme: Identifiable, Hashable {
         ButtonTheme(id: 11, name: "Capsule"),
         ButtonTheme(id: 12, name: "Neon"),
         // Image themes from open-source GTK/xfwm4 themes (assets/button-themes)
-        ButtonTheme(id: 32, name: "Arc", folder: "arc"),
-        ButtonTheme(id: 33, name: "Glyph", folder: "graphite"),
-        ButtonTheme(id: 34, name: "Orchis", folder: "orchis"),
-        ButtonTheme(id: 35, name: "Colloid", folder: "colloid"),
-        ButtonTheme(id: 36, name: "Nord", folder: "nord"),
-        ButtonTheme(id: 37, name: "Fluent", folder: "fluent-square"),
+        ButtonTheme(id: 32, name: "Arc", folder: "arc", source: .openSource),
+        ButtonTheme(id: 33, name: "Glyph", folder: "graphite", source: .openSource),
+        ButtonTheme(id: 34, name: "Orchis", folder: "orchis", source: .openSource),
+        ButtonTheme(id: 35, name: "Colloid", folder: "colloid", source: .openSource),
+        ButtonTheme(id: 36, name: "Nord", folder: "nord", source: .openSource),
+        ButtonTheme(id: 37, name: "Fluent", folder: "fluent-square", source: .openSource),
+        // The most downloaded KDE window decorations (store.kde.org); same order as tools/pack_button_themes.swift
+        ButtonTheme(id: 38, name: "Sweet", folder: "kde-sweet", source: .kde, downloads: 1_441_262),
+        ButtonTheme(id: 39, name: "Sweet Mars", folder: "kde-sweet-mars", source: .kde, downloads: 852_830),
+        ButtonTheme(id: 40, name: "Layan", folder: "kde-layan", source: .kde, downloads: 701_709),
+        ButtonTheme(id: 41, name: "Arc KDE", folder: "kde-arc", source: .kde, downloads: 642_480),
+        ButtonTheme(id: 42, name: "Nordic", folder: "kde-nordic", source: .kde, downloads: 543_059),
+        ButtonTheme(id: 43, name: "Ambar Blue", folder: "kde-sweet-ambar-blue", source: .kde, downloads: 384_735),
+        ButtonTheme(id: 44, name: "Ant", folder: "kde-ant-dark", source: .kde, downloads: 362_825),
+        ButtonTheme(id: 45, name: "Adapta", folder: "kde-adapta", source: .kde, downloads: 244_143),
+        ButtonTheme(id: 46, name: "Materia", folder: "kde-materia", source: .kde, downloads: 209_695),
+        ButtonTheme(id: 47, name: "Qogir", folder: "kde-qogir-circle", source: .kde, downloads: 186_108),
+        ButtonTheme(id: 48, name: "Graphite KDE", folder: "kde-graphite-round", source: .kde),
+        ButtonTheme(id: 49, name: "Orchis KDE", folder: "kde-orchis", source: .kde),
     ]
 
     static func named(_ id: Int) -> String { all.first { $0.id == id }?.name ?? "System" }
@@ -204,5 +229,24 @@ final class AppRules: ObservableObject {
         defaults.set(auto, forKey: Key.autoExcludedApps)
         Notify.reloadAgent()
         load()
+    }
+}
+
+// MARK: - Colors stored as hex
+
+extension Color {
+    /// "#RRGGBB" or "#RRGGBBAA".
+    init(hex: String) {
+        var h = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
+        if h.count == 6 { h += "FF" }
+        let v = UInt64(h, radix: 16) ?? 0xE2A100FF
+        self.init(.sRGB, red: Double((v >> 24) & 0xFF) / 255, green: Double((v >> 16) & 0xFF) / 255,
+                  blue: Double((v >> 8) & 0xFF) / 255, opacity: Double(v & 0xFF) / 255)
+    }
+
+    var hexRGBA: String {
+        let c = NSColor(self).usingColorSpace(.sRGB) ?? .black
+        let parts = [c.redComponent, c.greenComponent, c.blueComponent, c.alphaComponent].map { Int(($0 * 255).rounded()) }
+        return "#" + parts.map { String(format: "%02X", max(0, min(255, $0))) }.joined()
     }
 }

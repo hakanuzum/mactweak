@@ -36,19 +36,28 @@ IMP mt_hook(Class cls, const char *selector, id block) {
 // ---------------------------------------------------------------------------
 // Settings state
 
-static int g_settings_token = -1, g_app_token = -1, g_alive_token = -1, g_listen_token = -1;
-static uint64_t g_settings = 0, g_app = 0;
+static int g_settings_token = -1, g_app_token = -1, g_border_token = -1, g_alive_token = -1, g_listen_token = -1;
+static uint64_t g_settings = 0, g_app = 0, g_border = 0;
 static bool g_inert = false;  // never touch this process (not an app, or a system UI process)
 static dispatch_once_t g_ready_once;
 
 static void refresh_windows(void);
 
 static void read_state(void) {
-    uint64_t s = 0, a = 0;
+    uint64_t s = 0, a = 0, b = 0;
     if (g_settings_token >= 0) notify_get_state(g_settings_token, &s);
     if (g_app_token >= 0) notify_get_state(g_app_token, &a);
+    if (g_border_token >= 0) notify_get_state(g_border_token, &b);
     g_settings = ((s & 0xFF) == MT_MAGIC) ? s : 0;  // no agent: everything stays macOS default
     g_app = a;
+    g_border = g_settings ? b : 0;
+}
+
+// MACTWEAK_NOTIFY_SUFFIX gives a process its own set of notify names, so tests
+// can drive the core without touching the settings every other app reads.
+static void notify_name(char *buf, size_t size, const char *base, const char *tail) {
+    const char *suffix = getenv("MACTWEAK_NOTIFY_SUFFIX");
+    snprintf(buf, size, "%s%s%s", base, tail ? tail : "", suffix ? suffix : "");
 }
 
 // System processes we never touch (login window, password and Touch ID prompts).
@@ -69,10 +78,13 @@ static void prepare_state(void) {
         for (int i = 0; bundle_id && kNeverTouch[i]; i++)
             if (strcmp(bundle_id, kNeverTouch[i]) == 0) g_inert = true;
 
-        notify_register_check(MT_N_SETTINGS, &g_settings_token);
+        char name[512];
+        notify_name(name, sizeof name, MT_N_SETTINGS, NULL);
+        notify_register_check(name, &g_settings_token);
+        notify_name(name, sizeof name, MT_N_BORDER, NULL);
+        notify_register_check(name, &g_border_token);
         if (bundle_id) {
-            char name[512];
-            snprintf(name, sizeof name, "%s%s", MT_N_APP_PREFIX, bundle_id);
+            notify_name(name, sizeof name, MT_N_APP_PREFIX, bundle_id);
             notify_register_check(name, &g_app_token);
         }
         char alive[96];
@@ -80,8 +92,9 @@ static void prepare_state(void) {
         if (notify_register_check(alive, &g_alive_token) == NOTIFY_STATUS_OK)
             notify_set_state(g_alive_token, g_inert ? 2 : 1);
         read_state();
+        notify_name(name, sizeof name, MT_N_SETTINGS, NULL);
         if (!g_inert)
-            notify_register_dispatch(MT_N_SETTINGS, &g_listen_token, dispatch_get_main_queue(), ^(int t) {
+            notify_register_dispatch(name, &g_listen_token, dispatch_get_main_queue(), ^(int t) {
                 (void)t;
                 read_state();
                 if (getenv("MACTWEAK_LOG"))
@@ -113,6 +126,8 @@ bool mt_flag(uint64_t bit) { return mt_enabled() && (g_settings & bit); }
 
 uint64_t mt_settings(void) { return g_settings; }
 
+uint64_t mt_border(void) { return mt_enabled() ? g_border : 0; }
+
 // ---------------------------------------------------------------------------
 // Redraw open windows with the new settings
 
@@ -136,6 +151,7 @@ static void refresh_windows(void) {
             MSG_VOID(MSG(button, "layer"), "setNeedsDisplay");
         }
         MSG_VOID(w, "invalidateShadow");
+        mt_border_update(w);
     }
 }
 
@@ -150,6 +166,7 @@ static void install(void) {
     mt_corners_install();
     mt_titlebar_install();
     mt_buttons_install();
+    mt_border_install();
     // Loaded into an app that is already running: update its open windows now.
     // Read the NSApp global instead of calling +sharedApplication: creating the
     // application object this early would instantiate plain NSApplication before

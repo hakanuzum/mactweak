@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:ns4="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:xlink="http://www.w3.org/1999/xlink" id="svg4306" width="22" height="22" version="1.1" style="enable-background:new" sodipodi:docname="minimize.svg" inkscape:version="0.92.4 5da689c313, 2019-01-14">
+  <metadata id="metadata26">
+    <rdf:RDF>
+      <ns4:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </ns4:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs id="defs24" />
+  <sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="1366" inkscape:window-height="713" id="namedview22" showgrid="false" inkscape:zoom="7.5853272" inkscape:cx="0.57101175" inkscape:cy="-39.608137" inkscape:window-x="0" inkscape:window-y="27" inkscape:window-maximized="1" inkscape:current-layer="svg4306" />
+  <use x="0" y="0" xlink:href="#g1051" id="use1053" transform="translate(27.966102)" width="100%" height="100%" />
+  <g transform="translate(-481.45333,232.84051)" inkscape:label="#hover-center" id="hover-center" style="display:inline">
+    <g transform="translate(-781,-432.63782)" style="display:inline;opacity:1" id="g6314-3">
+      <ellipse ry="7.9999995" rx="7.999999" id="ellipse6288-6" style="display:inline;opacity:0.5;fill:#b2b2b2;fill-opacity:0.96837942;stroke:none;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" cx="1273" cy="254.99998" />
+      <g transform="translate(1265,247)" id="g6312-0" style="display:inline;opacity:1;fill:#c0e3ff;fill-opacity:1">
+        <g id="g6292-6" inkscape:label="status" style="display:inline;fill:#c0e3ff;fill-opacity:1" transform="translate(-81.0002,-967)" />
+        <g style="fill:#c0e3ff;fill-opacity:1" id="g6294-2" inkscape:label="devices" transform="translate(-81.0002,-967)" />
+        <g style="fill:#c0e3ff;fill-opacity:1" id="g6296-6" inkscape:label="apps" transform="translate(-81.0002,-967)" />
+        <g style="fill:#c0e3ff;fill-opacity:1" id="g6298-1" inkscape:label="places" transform="translate(-81.0002,-967)" />
+        <g style="fill:#c0e3ff;fill-opacity:1" id="g6300-8" inkscape:label="mimetypes" transform="translate(-81.0002,-967)" />
+        <g id="g6302-7" inkscape:label="emblems" style="display:inline;fill:#c0e3ff;fill-opacity:1" transform="translate(-81.0002,-967)" />
+        <g id="g6304-9" inkscape:label="emotes" style="display:inline;fill:#c0e3ff;fill-opacity:1" transform="translate(-81.0002,-967)" />
+        <g id="g6306-2" inkscape:label="categories" style="display:inline;fill:#c0e3ff;fill-opacity:1" transform="translate(-81.0002,-967)" />
+        <g id="g6310-0" inkscape:label="actions" style="display:inline;fill:#c0e3ff;fill-opacity:1" transform="translate(-81.0002,-967)">
+          <path inkscape:connector-curvature="0" d="m 86.0002,974 v 2 h 6 v -2 z" id="path6308-2" style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:Sans;-inkscape-font-specification:Sans;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;baseline-shift:baseline;text-anchor:start;display:inline;overflow:visible;visibility:visible;opacity:0.75;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" sodipodi:nodetypes="ccccc" />
+        </g>
+      </g>
+    </g>
+    <rect style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0" id="rect6316-3" width="16" height="16" x="484" y="-185.63782" />
+  </g>
+  </svg>

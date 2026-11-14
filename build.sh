@@ -23,7 +23,7 @@ echo "› core (libmactweak.dylib)"
 # arm64e: Apple's own apps; x86_64: apps running under Rosetta.
 xcrun clang -fobjc-arc -Os $WARN -dynamiclib -arch arm64 -arch arm64e -arch x86_64 \
     -mmacosx-version-min=$TARGET -Wl,-dead_strip_dylibs -install_name @rpath/libmactweak.dylib \
-    -Icore core/core.m core/corners.m core/titlebar.m core/buttons.m build/tmp/button_themes.c \
+    -Icore core/core.m core/corners.m core/titlebar.m core/buttons.m core/border.m build/tmp/button_themes.c \
     -o "$C/Frameworks/libmactweak.dylib" 2>&1 | grep -v 'arm64e.*ABI' || true
 test -f "$C/Frameworks/libmactweak.dylib"
 if otool -L "$C/Frameworks/libmactweak.dylib" | grep -q '\.framework/'; then

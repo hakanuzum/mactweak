@@ -49,10 +49,13 @@ bool mt_enabled(void);                            // agent running, enabled, and
 bool mt_flag(uint64_t bit);                       // enabled and the bit is set in the global state
 bool mt_target_radius(double *top, double *bottom);  // true when the corner radius should change
 uint64_t mt_settings(void);                       // raw global state
+uint64_t mt_border(void);                         // border state (0 when MacTweak is off for this app)
 
 // Modules: each installs its hooks once.
 void mt_corners_install(void);   // corners.m
 void mt_titlebar_install(void);  // titlebar.m
 void mt_buttons_install(void);   // buttons.m
+void mt_border_install(void);    // border.m
+void mt_border_update(id window);  // border.m: apply border, opacity and shadow to one window
 
 #endif

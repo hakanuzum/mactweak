@@ -9,7 +9,10 @@
 // The order of `themes` gives the theme ids: 32, 33, ... (MT_THEME_IMAGE_BASE).
 import AppKit
 
-let themes = ["arc", "graphite", "orchis", "colloid", "nord", "fluent-square"]
+let defaultThemes = ["arc", "graphite", "orchis", "colloid", "nord", "fluent-square",
+                     "kde-sweet", "kde-sweet-mars", "kde-layan", "kde-arc", "kde-nordic", "kde-sweet-ambar-blue",
+                     "kde-ant-dark", "kde-adapta", "kde-materia", "kde-qogir-circle", "kde-graphite-round", "kde-orchis"]
+let themes = CommandLine.arguments.count > 4 ? Array(CommandLine.arguments[4...]) : defaultThemes
 let buttons = ["close", "min", "max"]
 let states = ["normal", "hover", "pressed", "inactive"]
 let side = 56
@@ -17,18 +20,37 @@ let side = 56
 let args = CommandLine.arguments
 let src = args[1], outC = args[2], outPNG = args[3]
 
+/// Renders artwork large, crops away transparent margins, then fits it into a
+/// square with a little padding. Aurorae files place each state somewhere on a
+/// bigger canvas, and xfwm4 tiles carry empty borders; cropping fixes both.
 func png(_ path: String) -> Data? {
-    guard let image = NSImage(contentsOfFile: path) else { return nil }
+    guard let image = NSImage(contentsOfFile: path), image.size.width > 0 else { return nil }
+    let big = 512.0
+    let k0 = big / max(image.size.width, image.size.height)
+    let bw = Int(image.size.width * k0), bh = Int(image.size.height * k0)
+    let src = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: bw, pixelsHigh: bh, bitsPerSample: 8, samplesPerPixel: 4,
+                               hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: src)
+    image.draw(in: NSRect(x: 0, y: 0, width: bw, height: bh))
+    NSGraphicsContext.restoreGraphicsState()
+    // Bounding box of visible pixels
+    var x0 = bw, y0 = bh, x1 = -1, y1 = -1
+    for y in 0..<bh { for x in 0..<bw where src.colorAt(x: x, y: y)!.alphaComponent > 0.04 {
+        x0 = min(x0, x); x1 = max(x1, x); y0 = min(y0, y); y1 = max(y1, y)
+    } }
+    guard x1 >= x0, y1 >= y0, let cg = src.cgImage?.cropping(to: CGRect(x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1))
+    else { return nil }
     let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: side, pixelsHigh: side, bitsPerSample: 8,
                                samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
                                bytesPerRow: 0, bitsPerPixel: 0)!
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
     NSGraphicsContext.current!.imageInterpolation = .high
-    let s = image.size
-    let k = min(Double(side) / s.width, Double(side) / s.height)
-    let w = s.width * k, h = s.height * k
-    image.draw(in: NSRect(x: (Double(side) - w) / 2, y: (Double(side) - h) / 2, width: w, height: h))
+    let box = Double(side) * 0.92  // small padding
+    let k = min(box / Double(cg.width), box / Double(cg.height))
+    let w = Double(cg.width) * k, h = Double(cg.height) * k
+    NSImage(cgImage: cg, size: .zero).draw(in: NSRect(x: (Double(side) - w) / 2, y: (Double(side) - h) / 2, width: w, height: h))
     NSGraphicsContext.restoreGraphicsState()
     return rep.representation(using: .png, properties: [:])
 }

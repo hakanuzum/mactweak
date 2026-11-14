@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:ns4="http://creativecommons.org/ns#" xmlns:ns6="http://www.openswatchbook.org/uri/2009/osb" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" id="svg4306" width="23" height="23" version="1.1" style="enable-background:new" sodipodi:docname="close.svg" inkscape:version="1.2.2 (b0a8486541, 2022-12-01)">
+  <metadata id="metadata31">
+    <rdf:RDF>
+      <ns4:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </ns4:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs id="defs29">
+    <linearGradient id="fg_color" ns6:paint="solid">
+      <stop style="stop-color:#5c616c;stop-opacity:1;" offset="0" id="stop1387" />
+    </linearGradient>
+    <linearGradient id="selected_fg_color" ns6:paint="solid">
+      <stop style="stop-color:#ffffffgit;stop-opacity:1;" offset="0" id="stop6555" />
+    </linearGradient>
+  </defs>
+  <sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="1920" inkscape:window-height="1016" id="namedview27" showgrid="true" inkscape:zoom="1.8963318" inkscape:cx="-170.06517" inkscape:cy="60.116061" inkscape:window-x="0" inkscape:window-y="32" inkscape:window-maximized="1" inkscape:current-layer="svg4306" inkscape:snap-bbox="true" inkscape:bbox-nodes="true" inkscape:snap-nodes="false" inkscape:showpageshadow="2" inkscape:pagecheckerboard="0" inkscape:deskcolor="#d1d1d1">
+    <inkscape:grid type="xygrid" id="grid892" />
+  </sodipodi:namedview>
+  <g style="display:inline" transform="translate(-9.0000007,772.63782)" id="pressed-center" inkscape:label="#pressed-center">
+    <rect style="opacity:1;fill:#d05258;fill-opacity:1;stroke:none;stroke-width:0.92000002;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers" id="rect668" width="23" height="23" x="9" y="-694.63782" ry="11.5" />
+    <path style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.56059766;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.49411765;paint-order:stroke fill markers" d="m 16.353515,-687.99134 -0.70703,0.70704 4.146483,4.14648 -4.146483,4.14648 0.70703,0.70704 4.146485,-4.14649 4.146484,4.14649 0.707031,-0.70704 -4.146484,-4.14648 4.146484,-4.14648 -0.707031,-0.70704 -4.146484,4.14649 z" id="path670" inkscape:connector-curvature="0" />
+  </g>
+  </svg>

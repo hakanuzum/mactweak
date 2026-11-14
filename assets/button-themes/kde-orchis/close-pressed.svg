@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:ns4="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" id="svg4306" width="22" height="22" version="1.1" style="enable-background:new" sodipodi:docname="close.svg" inkscape:version="0.92.4 5da689c313, 2019-01-14">
+  <metadata id="metadata31">
+    <rdf:RDF>
+      <ns4:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </ns4:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs id="defs29" />
+  <sodipodi:namedview pagecolor="#3a3a3a" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="1366" inkscape:window-height="692" id="namedview27" showgrid="true" inkscape:zoom="3.7926637" inkscape:cx="104.02493" inkscape:cy="11.416564" inkscape:window-x="0" inkscape:window-y="0" inkscape:window-maximized="1" inkscape:current-layer="svg4306">
+    <inkscape:grid type="xygrid" id="grid838" />
+  </sodipodi:namedview>
+  <g id="pressed-center">
+    <rect id="rect4211" width="22" height="22" x="46" y="0" style="opacity:0.00100002;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <circle id="circle4215" cx="57" cy="11" r="11" style="opacity:0.18999999;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:478.43673706;stroke-opacity:0.4" />
+    <path style="opacity:1;fill:#444444;fill-opacity:1;stroke:none;stroke-width:1.71428573;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers" d="M 52 6 L 52 7.4140625 L 55.585938 11 L 52 14.585938 L 52 16 L 53.414062 16 L 57 12.414062 L 60.585938 16 L 62 16 L 62 14.585938 L 58.414062 11 L 62 7.4140625 L 62 6 L 60.585938 6 L 57 9.5859375 L 53.414062 6 L 52 6 z " id="path884" />
+  </g>
+  </svg>

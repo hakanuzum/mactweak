@@ -51,6 +51,15 @@ static bool legacy_sdk(void) {
 
 static IMP orig_minimize_origin, orig_zoom_origin, orig_center_lights;
 
+// Extra space between traffic lights: +3 pt to bring legacy apps to the modern
+// 23 pt, plus the user's spacing slider (may be negative).
+static double extra_spacing(void) {
+    if (!mt_enabled()) return 0;
+    double d = mt_button_spacing(mt_settings());
+    if (mt_flag(MT_F_LEGACY_SPACING) && legacy_sdk()) d += 3;
+    return d;
+}
+
 void mt_titlebar_install(void) {
     const char *classes[] = {"NSThemeFrame", "NSTitledFrame"};
     for (int i = 0; i < 2; i++) {
@@ -61,15 +70,16 @@ void mt_titlebar_install(void) {
 
     Class frame = objc_getClass("NSThemeFrame");
 
-    // The zoom button's origin is derived from the minimize button's, so both get +3.
+    // The zoom button's origin is derived from the minimize button's, so both get the
+    // same offset: minimize moves by d, zoom by 2d.
     orig_minimize_origin = mt_hook(frame, "_collapseButtonOrigin", ^CGPoint(id self) {
         CGPoint p = ((point_fn)orig_minimize_origin)(self, SEL_("_collapseButtonOrigin"));
-        if (mt_flag(MT_F_LEGACY_SPACING) && legacy_sdk()) p.x += 3;
+        p.x += extra_spacing();
         return p;
     });
     orig_zoom_origin = mt_hook(frame, "_zoomButtonOrigin", ^CGPoint(id self) {
         CGPoint p = ((point_fn)orig_zoom_origin)(self, SEL_("_zoomButtonOrigin"));
-        if (mt_flag(MT_F_LEGACY_SPACING) && legacy_sdk()) p.x += 3;
+        p.x += extra_spacing();
         return p;
     });
 

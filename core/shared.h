@@ -19,6 +19,8 @@
 #define MT_N_ALIVE_PREFIX MT_DOMAIN ".alive."
 // Posted by the settings app when preferences change; the agent re-reads them.
 #define MT_N_RELOAD MT_DOMAIN ".reload"
+// Border, window opacity and shadow settings (see the layout below).
+#define MT_N_BORDER MT_DOMAIN ".border"
 
 // --- Global state (uint64) ---
 // bits 0-7   : magic byte; missing means the agent is not running and the core touches nothing
@@ -31,6 +33,7 @@
 // bit 34     : indent and vertically center traffic lights
 // bit 36     : keep buttons colored in inactive windows
 // bits 40-47 : button theme (0 = system)
+// bits 48-55 : extra traffic light spacing in pt, stored +64 (64 = system spacing)
 #define MT_MAGIC 0x4BULL
 #define MT_F_ENABLED (1ULL << 8)
 #define MT_F_RADIUS (1ULL << 9)
@@ -38,6 +41,21 @@
 #define MT_F_LEGACY_TITLEBAR (1ULL << 33)
 #define MT_F_INDENT_LIGHTS (1ULL << 34)
 #define MT_F_INACTIVE_COLOR (1ULL << 36)
+
+// --- Border state (uint64, MT_N_BORDER) ---
+// bits 0-31  : border color RGBA, 8 bits each (R in bits 0-7)
+// bits 32-39 : border width x4 (0-63.75 pt)
+// bit 40     : border on
+// bit 41     : only on the active (key) window
+// bit 42     : remove window shadows
+// bits 48-55 : opacity of inactive windows in percent (0 or 100 = unchanged)
+#define MT_B_ENABLED (1ULL << 40)
+#define MT_B_ACTIVE_ONLY (1ULL << 41)
+#define MT_B_NO_SHADOW (1ULL << 42)
+
+static inline int mt_button_spacing(uint64_t s) { return (int)((s >> 48) & 0xFF) - 64; }
+static inline double mt_border_width(uint64_t b) { return (double)((b >> 32) & 0xFF) / 4.0; }
+static inline int mt_inactive_opacity(uint64_t b) { return (int)((b >> 48) & 0xFF); }
 
 // --- Per-app state (uint64) ---
 // bit 0      : excluded (do not touch this app at all)

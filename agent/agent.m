@@ -20,7 +20,7 @@
 
 static NSString *const kDomain = @MT_DOMAIN;
 static NSString *const kCoreName = @"libmactweak.dylib";
-static int g_settings_token = -1;
+static int g_settings_token = -1, g_border_token = -1;
 static NSMutableDictionary<NSString *, NSNumber *> *g_app_tokens;
 static NSString *g_core_path;  // installed core
 static NSDate *g_started;
@@ -84,7 +84,33 @@ static uint64_t global_state(void) {
     if (pref_bool(@"inactiveButtonColor", NO)) s |= MT_F_INACTIVE_COLOR;
     uint64_t theme = (uint64_t)pref_double(@"buttonTheme", 0);
     s |= (theme & 0xFF) << 40;
+    long spacing = lround(pref_double(@"buttonSpacing", 0));  // extra pt between traffic lights
+    s |= (uint64_t)((spacing + 64) & 0xFF) << 48;
     return s;
+}
+
+// "#RRGGBB" or "#RRGGBBAA" -> RGBA packed as in shared.h (R in the low byte).
+static uint64_t parse_color(NSString *hex) {
+    unsigned int v = 0;
+    NSString *h = [hex hasPrefix:@"#"] ? [hex substringFromIndex:1] : hex;
+    if (![[NSScanner scannerWithString:h] scanHexInt:&v]) return 0xFF00A1E2;  // default amber
+    if (h.length == 6) v = (v << 8) | 0xFF;
+    uint64_t r = (v >> 24) & 0xFF, g = (v >> 16) & 0xFF, b = (v >> 8) & 0xFF, a = v & 0xFF;
+    return r | (g << 8) | (b << 16) | (a << 24);
+}
+
+static uint64_t border_state(void) {
+    uint64_t b = 0;
+    id color = pref(@"borderColor");
+    b |= parse_color([color isKindOfClass:NSString.class] ? color : @"#E2A100FF");
+    double width = fmax(0, fmin(63, pref_double(@"borderWidth", 2)));
+    b |= (uint64_t)lround(width * 4) << 32;
+    if (pref_bool(@"borderEnabled", NO)) b |= MT_B_ENABLED;
+    if (pref_bool(@"borderActiveOnly", YES)) b |= MT_B_ACTIVE_ONLY;
+    if (!pref_bool(@"windowShadow", YES)) b |= MT_B_NO_SHADOW;
+    long opacity = lround(fmax(0, fmin(100, pref_double(@"inactiveOpacity", 100))));
+    b |= (uint64_t)opacity << 48;
+    return b;
 }
 
 static NSDictionary<NSString *, NSNumber *> *app_states(void) {
@@ -112,6 +138,8 @@ static void write_states(void) {
     if (g_settings_token < 0) notify_register_check(MT_N_SETTINGS, &g_settings_token);
     uint64_t global = global_state();
     notify_set_state(g_settings_token, global);
+    if (g_border_token < 0) notify_register_check(MT_N_BORDER, &g_border_token);
+    notify_set_state(g_border_token, border_state());
 
     NSDictionary *wanted = app_states();
     for (NSString *k in g_app_tokens.allKeys) {
@@ -362,6 +390,7 @@ int main(void) {
         g_sigterm = dispatch_source_create(DISPATCH_SOURCE_TYPE_SIGNAL, SIGTERM, 0, dispatch_get_main_queue());
         dispatch_source_set_event_handler(g_sigterm, ^{
             if (g_settings_token >= 0) notify_set_state(g_settings_token, 0);
+            if (g_border_token >= 0) notify_set_state(g_border_token, 0);
             notify_post(MT_N_SETTINGS);
             exit(0);
         });

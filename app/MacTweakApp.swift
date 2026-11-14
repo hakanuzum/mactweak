@@ -79,6 +79,7 @@ struct RootView: View {
         case .corners: CornersPane()
         case .buttons: ButtonsPane()
         case .titlebar: TitlebarPane()
+        case .border: BorderPane()
         case .apps: AppRulesPane()
         case .status: StatusPane()
         case .about: AboutPane()
@@ -113,7 +114,7 @@ struct IconGrid: View {
     let open: (Pane) -> Void
     @AppStorage(Key.enabled) private var enabled = true
 
-    private let bands: [[Pane]] = [[.general, .corners, .buttons, .titlebar], [.apps, .status, .about]]
+    private let bands: [[Pane]] = [[.general, .corners, .buttons, .titlebar, .border], [.apps, .status, .about]]
 
     var body: some View {
         VStack(spacing: 0) {
