@@ -2,6 +2,7 @@
 # Builds MacTweak: build/MacTweak.app
 #   ./build.sh            build
 #   ./build.sh --install  build, copy to /Applications/MacTweak.app, restart the agent if it runs
+#   ./build.sh --dmg      build, then dist/MacTweak-<version>.dmg (+ .sha256)
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -65,6 +66,7 @@ cp assets/icons/*.svg "$C/Resources/Icons/"
 cp -R build/tmp/ButtonThemes "$C/Resources/ButtonThemes"
 cp app/Info.plist "$C/Info.plist"
 /usr/libexec/PlistBuddy -c "Add :MTCoreBuild integer $BUILD_STAMP" "$C/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_STAMP" "$C/Info.plist"
 
 echo "› ad-hoc signature"
 codesign --force --sign - "$C/Frameworks/libmactweak.dylib"
@@ -82,4 +84,17 @@ if [[ "${1:-}" == "--install" ]]; then
         launchctl kickstart -k "gui/$(id -u)/$LABEL"
         echo "✓ agent restarted (core updated)"
     fi
+fi
+
+if [[ "${1:-}" == "--dmg" ]]; then
+    VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$C/Info.plist")
+    DMG="dist/MacTweak-$VERSION.dmg"
+    STAGE=build/tmp/dmg
+    echo "› $DMG"
+    rm -rf "$STAGE" && mkdir -p "$STAGE" dist
+    cp -R "$APP" "$STAGE/"
+    ln -s /Applications "$STAGE/Applications"
+    hdiutil create -quiet -ov -volname "MacTweak $VERSION" -srcfolder "$STAGE" -fs HFS+ -format UDZO "$DMG"
+    (cd dist && shasum -a 256 "$(basename "$DMG")" > "$(basename "$DMG").sha256")
+    echo "✓ $DMG"
 fi

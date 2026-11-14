@@ -1,6 +1,6 @@
 # MacTweak
 
-macOS 27 pencerelerini istediğiniz gibi ayarlar: köşe yarıçapı, trafik ışığı düğmeleri, eski uygulamaların başlık çubuğu. Ayar ekranı Sistem Ayarları düzeninde. Yeni ayar modülleri eklenecek.
+macOS 27 pencerelerini istediğiniz gibi ayarlar: köşe yarıçapı, trafik ışığı düğme temaları (31 tema), başlık çubuğu, pencere kenarlığı, arka plan pencerelerinin soldurulması, macOS'in pencere çizgisi ve gölgesi. Ayar ekranı Sistem Ayarları düzeninde, arayüz İngilizce.
 
 ## Gereksinim
 
@@ -17,7 +17,7 @@ MacTweak root yetkisi istemez ve sistem süreçlerine kod yüklemez.
 | `app/` | `MacTweak.app` | SwiftUI ayar uygulaması. |
 | `icon/` | `AppIcon.icns` | `icon/main.swift` ikonu vektörle çizer (plaka, şalter, vidalar, el damgası). `icon/private/icon.png` varsa onu kullanır (git'e girmez). |
 
-Çekirdek modülleri: `corners.m` (köşe yarıçapı), `titlebar.m` (başlık çubuğu), `buttons.m` (trafik ışığı temaları). Yeni bir modül için:
+Çekirdek modülleri: `corners.m` (köşe yarıçapı), `titlebar.m` (başlık çubuğu), `buttons.m` (trafik ışığı temaları), `border.m` (kenarlık, soldurma, gölge ve macOS'in pencere çizgisi). Yeni bir modül için:
 
 1. `core/` altına dosyayı ekleyin.
 2. `internal.h`'ye `mt_<ad>_install` bildirimini yazın.
@@ -49,12 +49,27 @@ Klavye dili baloncuğu (`TUINSCursorUIController`, 11.5 nk) gibi başlıksız pe
 
 **Dikkat:** Çekirdeğin kurucusu (constructor), uygulama kendini başlatmadan önce çalışır. Orada AppKit sınıflarına mesaj göndermeyin; ARC'nin eklediği `retain` de bir mesajdır. Mesaj gönderilirse `+initialize` erken çalışır ve SwiftUI, Chrome, Electron gibi uygulamalar çöker. `CLASS()` bu yüzden fonksiyon değil makro.
 
+## Kurulum (DMG)
+
+1. SIP ve AMFI (bir kez, her Mac'te):
+   - Kurtarma Modu → Terminal: `csrutil disable`, sonra yeniden başlatın.
+   - macOS'te: `sudo nvram boot-args="amfi_get_out_of_my_way=1"`, sonra yeniden başlatın. Yazımı kontrol edin: `nvram boot-args`.
+2. `MacTweak-<sürüm>.dmg`'yi açın, `MacTweak.app`'i Uygulamalar'a sürükleyin.
+3. MacTweak'i açın, General → **Start**. Status sayfası SIP, AMFI ve ajan durumunu gösterir.
+
+Uygulama yerel (ad-hoc) imzalı; indirilen DMG'de ilk açılışta macOS onay ister (Sağ tık → Aç). SIP veya AMFI açıkken ajan uygulamalara yüklenmez, yani hiçbir şey bozulmaz.
+
+Geri almak: General → Start at login kapalı, uygulamayı silin. Kurtarma'da `csrutil enable`, macOS'te `sudo nvram -d boot-args`.
+
 ## Derleme
 
 ```sh
 ./build.sh            # build/MacTweak.app
 ./build.sh --install  # /Applications/MacTweak.app + çalışan ajanı yeniden başlat
+./build.sh --dmg      # dist/MacTweak-<sürüm>.dmg + .sha256
 ```
+
+Sürüm `app/Info.plist` içindeki `CFBundleShortVersionString`; `CFBundleVersion` ve `MTCoreBuild` derleme zamanından gelir.
 
 Xcode 27 gerekir (`DEVELOPER_DIR` varsayılanı `/Applications/Xcode.app`).
 
