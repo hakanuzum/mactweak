@@ -50,11 +50,11 @@ struct CornerStyle: Identifiable, Hashable {
 
     static let all: [CornerStyle] = [
         CornerStyle(id: "system", name: "macOS 27", top: nil, bottom: nil),
-        CornerStyle(id: "medium", name: "Orta", top: 13, bottom: 13),
+        CornerStyle(id: "medium", name: "Medium", top: 13, bottom: 13),
         CornerStyle(id: "sequoia", name: "Sequoia", top: 10, bottom: 10),
         CornerStyle(id: "catalina", name: "Catalina", top: 5, bottom: 0),
-        CornerStyle(id: "square", name: "Kare", top: 0, bottom: 0),
-        CornerStyle(id: "custom", name: "Özel", top: nil, bottom: nil),
+        CornerStyle(id: "square", name: "Square", top: 0, bottom: 0),
+        CornerStyle(id: "custom", name: "Custom", top: nil, bottom: nil),
     ]
     static let systemRadius = 16.0  // measured default on macOS 27
 
@@ -68,16 +68,16 @@ struct ButtonTheme: Identifiable, Hashable {
     let name: String
 
     static let all: [ButtonTheme] = [
-        ButtonTheme(id: 0, name: "Sistem"),
-        ButtonTheme(id: 1, name: "Klasik"),
-        ButtonTheme(id: 2, name: "Kare"),
-        ButtonTheme(id: 3, name: "Halka"),
-        ButtonTheme(id: 4, name: "Grafit"),
-        ButtonTheme(id: 5, name: "Nokta"),
+        ButtonTheme(id: 0, name: "System"),
+        ButtonTheme(id: 1, name: "Classic"),
+        ButtonTheme(id: 2, name: "Square"),
+        ButtonTheme(id: 3, name: "Ring"),
+        ButtonTheme(id: 4, name: "Graphite"),
+        ButtonTheme(id: 5, name: "Dot"),
         ButtonTheme(id: 6, name: "Pastel"),
     ]
 
-    static func named(_ id: Int) -> String { all.first { $0.id == id }?.name ?? "Sistem" }
+    static func named(_ id: Int) -> String { all.first { $0.id == id }?.name ?? "System" }
 
     static func color(theme: Int, index: Int) -> Color {
         switch theme {
@@ -94,8 +94,8 @@ struct ButtonTheme: Identifiable, Hashable {
 
 struct AppRule: Identifiable, Hashable {
     enum Kind: String, CaseIterable, Identifiable {
-        case exclude = "Hariç tut"
-        case customRadius = "Özel köşe"
+        case exclude = "Exclude"
+        case customRadius = "Custom corners"
         var id: String { rawValue }
     }
 

@@ -71,5 +71,5 @@ Xcode 27 gerekir (`DEVELOPER_DIR` varsayılanı `/Applications/Xcode.app`).
 
 ## Lisanslar
 
-- `assets/icons/*.png`: KDE Oxygen ikon teması (Nuno Pinheiro, David Vignoni ve diğerleri), LGPL-3.0-or-later (`assets/OXYGEN-ICONS-COPYING`, `assets/OXYGEN-ICONS-LGPL-3.0.txt`). Kaynak: github.com/KDE/oxygen-icons, 128x128.
+- `assets/icons/*.svg`: WhiteSur ikon teması (vinceliuice), GPL-3.0 (`assets/WHITESUR-ICONS-GPL-3.0.txt`). Kaynak: github.com/vinceliuice/WhiteSur-icon-theme. Apple logosu içeren ikonlar bilerek seçilmedi. GPL-3.0 yüzünden MacTweak dağıtılacaksa GPL-3.0 uyumlu lisanslanmalı.
 - `assets/hand-*.svg`: Microsoft Fluent Emoji, MIT (`assets/FLUENT-EMOJI-LICENSE`). Uygulama ikonundaki el damgası bunlardan çizilir.

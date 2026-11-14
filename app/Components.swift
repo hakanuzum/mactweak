@@ -8,7 +8,7 @@ struct PaneIcon: View {
 
     var body: some View {
         Group {
-            if let url = Bundle.main.url(forResource: pane.iconName, withExtension: "png", subdirectory: "Icons"),
+            if let url = Bundle.main.url(forResource: pane.iconName, withExtension: "svg", subdirectory: "Icons"),
                let image = NSImage(contentsOf: url) {
                 Image(nsImage: image).resizable().interpolation(.high)
             } else {
@@ -93,7 +93,7 @@ struct RadiusSlider: View {
         LabeledContent(title) {
             HStack {
                 Slider(value: $value, in: 0...26, step: 0.5)
-                Text(value.formatted(.number.precision(.fractionLength(0...1))) + " nk")
+                Text(value.formatted(.number.precision(.fractionLength(0...1))) + " pt")
                     .monospacedDigit()
                     .frame(width: 52, alignment: .trailing)
             }

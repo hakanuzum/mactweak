@@ -9,28 +9,28 @@ enum Pane: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .general: "Genel"
-        case .corners: "Köşeler"
-        case .buttons: "Düğmeler"
-        case .titlebar: "Başlık Çubuğu"
-        case .apps: "Uygulama Kuralları"
-        case .status: "Durum"
-        case .about: "Hakkında"
+        case .general: "General"
+        case .corners: "Corners"
+        case .buttons: "Buttons"
+        case .titlebar: "Title Bar"
+        case .apps: "App Rules"
+        case .status: "Status"
+        case .about: "About"
         }
     }
 
-    /// KDE Oxygen artwork in Resources/Icons (LGPL-3.0, see assets/OXYGEN-ICONS-COPYING).
+    /// WhiteSur icon theme artwork in Resources/Icons (GPL-3.0, see assets/WHITESUR-ICONS-GPL-3.0.txt).
     var iconName: String { rawValue }
 
     var summary: String {
         switch self {
-        case .general: "MacTweak'i açıp kapatın, oturum açılışında başlatın ve tüm ayar bölümlerine buradan ulaşın."
-        case .corners: "Pencere köşelerinin ne kadar yuvarlak olacağını seçin. Değişiklik açık pencerelere hemen uygulanır."
-        case .buttons: "Kapat, küçült ve büyüt düğmelerinin görünümünü seçin."
-        case .titlebar: "Trafik ışıklarının yeri ve macOS 26 öncesi SDK ile derlenmiş uygulamaların başlık çubuğu ölçüleri."
-        case .apps: "Bir uygulamayı MacTweak'ten hariç tutun ya da ona özel köşe yarıçapı verin."
-        case .status: "Sistem güvenlik ayarları, arka plan ajanı ve açık uygulamalarda MacTweak'in durumu."
-        case .about: "Sürüm, gizlilik ve bir sorun olursa yapılacaklar."
+        case .general: "Turn MacTweak on or off, start it at login, and reach every settings pane from here."
+        case .corners: "Choose how round window corners are. Changes apply to open windows right away."
+        case .buttons: "Choose how the close, minimize and zoom buttons look."
+        case .titlebar: "Traffic light placement, and title bar metrics for apps built with an SDK older than macOS 26."
+        case .apps: "Exclude an app from MacTweak or give it its own corner radius."
+        case .status: "System security settings, the background agent, and MacTweak's state in open apps."
+        case .about: "Version, privacy, and what to do if something goes wrong."
         }
     }
 }
@@ -57,17 +57,17 @@ struct GeneralPane: View {
                     HStack(spacing: 12) {
                         Image(systemName: "power.circle.fill").font(.title).foregroundStyle(.orange)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("MacTweak çalışmıyor").font(.headline)
-                            Text("Başlatınca bundan sonra açılan uygulamalara uygulanır.").foregroundStyle(.secondary)
+                            Text("MacTweak is not running").font(.headline)
+                            Text("Once started, it applies to apps you open from then on.").foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Button("Başlat") { setAgent(true) }.buttonStyle(.borderedProminent)
+                        Button("Start") { setAgent(true) }.buttonStyle(.borderedProminent)
                     }
                 }
             }
             Section {
-                Toggle("MacTweak'i etkinleştir", isOn: $enabled)
-                Toggle("Oturum açılınca başlat", isOn: Binding(get: { agentInstalled }, set: { setAgent($0) }))
+                Toggle("Enable MacTweak", isOn: $enabled)
+                Toggle("Start at login", isOn: Binding(get: { agentInstalled }, set: { setAgent($0) }))
             } footer: {
                 if let error { Text(error).foregroundStyle(.red) }
             }
@@ -77,16 +77,16 @@ struct GeneralPane: View {
                 NavigationRow(pane: .titlebar, open: open)
             }
             Section {
-                NavigationRow(pane: .apps, value: rules.rules.isEmpty ? "" : "\(rules.rules.count) kural", open: open)
-                NavigationRow(pane: .status, value: agentRunning ? "Çalışıyor" : "Çalışmıyor", open: open)
+                NavigationRow(pane: .apps, value: rules.rules.isEmpty ? "" : "\(rules.rules.count) rules", open: open)
+                NavigationRow(pane: .status, value: agentRunning ? "Running" : "Not running", open: open)
                 NavigationRow(pane: .about, open: open)
             }
-            Section("Diğer") {
+            Section("Other") {
                 Toggle(isOn: $restartFinder) {
-                    Text("Oturum açılışında Finder'ı yenile")
-                    Text("Finder MacTweak'ten önce açılırsa bir kez yeniden başlatılır.")
+                    Text("Restart Finder at login")
+                    Text("If Finder starts before MacTweak, it is restarted once.")
                 }
-                Toggle("Bu pencere her zaman üstte", isOn: $keepOnTop)
+                Toggle("Keep this window on top", isOn: $keepOnTop)
             }
         }
         .formStyle(.grouped)
@@ -101,7 +101,7 @@ struct GeneralPane: View {
             if on { try SystemControl.installAgent() } else { SystemControl.uninstallAgent() }
             error = nil
         } catch {
-            self.error = "Başlatılamadı: \(error.localizedDescription)"
+            self.error = "Could not start: \(error.localizedDescription)"
         }
         agentInstalled = SystemControl.agentInstalled
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { agentRunning = Notify.agentRunning }
@@ -119,7 +119,7 @@ struct CornersPane: View {
     var body: some View {
         Form {
             PaneHeader(pane: .corners)
-            Section("Köşe stili") {
+            Section("Corner style") {
                 LazyVGrid(columns: columns, spacing: 18) {
                     ForEach(CornerStyle.all) { s in
                         let r = radius(s)
@@ -130,9 +130,9 @@ struct CornersPane: View {
                 .padding(.vertical, 6)
             }
             if cornerStyle == "custom" {
-                Section("Özel yarıçap") {
-                    RadiusSlider(title: "Üst köşeler", value: $customTop)
-                    RadiusSlider(title: "Alt köşeler", value: $customBottom)
+                Section("Custom radius") {
+                    RadiusSlider(title: "Top corners", value: $customTop)
+                    RadiusSlider(title: "Bottom corners", value: $customBottom)
                 }
             }
         }
@@ -166,14 +166,14 @@ struct ButtonsPane: View {
                 }
                 .padding(.vertical, 6)
             } header: {
-                Text("Tema")
+                Text("Theme")
             } footer: {
-                Text("Simgeleri görmek için kartın üzerine gelin.")
+                Text("Hover over a card to see the symbols.")
             }
             Section {
                 Toggle(isOn: $inactiveColor) {
-                    Text("Arka plandaki pencerelerde de renkli kalsın")
-                    Text("macOS arka plandaki pencerenin düğmelerini griye çevirir.")
+                    Text("Keep colors in background windows")
+                    Text("macOS turns a background window's buttons gray.")
                 }
             }
         }
@@ -191,25 +191,25 @@ struct TitlebarPane: View {
     var body: some View {
         Form {
             PaneHeader(pane: .titlebar)
-            Section("Trafik ışıkları") {
+            Section("Traffic lights") {
                 Toggle(isOn: $indent) {
-                    Text("İçeri al ve ortala")
-                    Text("Araç çubuğu olmayan pencerelerde düğmeleri kenardan uzaklaştırır ve başlık çubuğunda ortalar.")
+                    Text("Indent and center")
+                    Text("In windows without a toolbar, moves the buttons away from the edge and centers them in the title bar.")
                 }
             }
             Section {
                 Toggle(isOn: $legacyHeight) {
-                    Text("Yeni başlık çubuğu yüksekliği")
-                    Text("Başlık çubuğu 28 yerine 32 nokta olur.")
+                    Text("Modern title bar height")
+                    Text("The title bar becomes 32 pt instead of 28.")
                 }
                 Toggle(isOn: $legacySpacing) {
-                    Text("Yeni düğme aralığı")
-                    Text("Düğmeler arası 20 yerine 23 nokta olur.")
+                    Text("Modern button spacing")
+                    Text("Buttons are 23 pt apart instead of 20.")
                 }
             } header: {
                 Text("Eski uygulamalar")
             } footer: {
-                Text("macOS 26 öncesi SDK ile derlenmiş uygulamalar (ör. Muxy, Zed, VLC) eski ölçüleri kullanır. Değişiklik uygulama yeniden açılınca görünür.")
+                Text("Apps built with an SDK older than macOS 26 (e.g. Muxy, Zed, VLC) use the old metrics. Changes show after the app is reopened.")
             }
         }
         .formStyle(.grouped)
@@ -228,11 +228,11 @@ struct AppRulesPane: View {
                 ForEach($model.rules) { $rule in
                     RuleRow(rule: $rule, changed: model.save, remove: { model.remove(rule.id) })
                 }
-                Button("Uygulama Ekle…", systemImage: "plus", action: chooseApps)
+                Button("Add App…", systemImage: "plus", action: chooseApps)
             } header: {
-                Text("Kurallar")
+                Text("Rules")
             } footer: {
-                Text("Değişiklik açık pencerelere hemen uygulanır.")
+                Text("Changes apply to open windows right away.")
             }
             if !model.automatic.isEmpty {
                 Section {
@@ -248,9 +248,9 @@ struct AppRulesPane: View {
                         }
                     }
                 } header: {
-                    Text("Otomatik hariç tutulanlar")
+                    Text("Excluded automatically")
                 } footer: {
-                    Text("MacTweak yüklüyken çöken uygulamalar buraya alınır.")
+                    Text("Apps that crashed while MacTweak was loaded end up here.")
                 }
             }
         }
@@ -263,7 +263,7 @@ struct AppRulesPane: View {
         panel.allowedContentTypes = [.applicationBundle]
         panel.allowsMultipleSelection = true
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
-        panel.prompt = "Ekle"
+        panel.prompt = "Add"
         guard panel.runModal() == .OK else { return }
         for url in panel.urls {
             if let id = Bundle(url: url)?.bundleIdentifier { model.add(id) }
@@ -294,11 +294,11 @@ struct RuleRow: View {
                 Button(role: .destructive, action: remove) { Image(systemName: "minus.circle.fill") }
                     .buttonStyle(.borderless)
                     .foregroundStyle(.red)
-                    .help("Kuralı kaldır")
+                    .help("Remove rule")
             }
             if rule.kind == .customRadius {
-                RadiusSlider(title: "Üst", value: $rule.top).onChange(of: rule.top) { changed() }
-                RadiusSlider(title: "Alt", value: $rule.bottom).onChange(of: rule.bottom) { changed() }
+                RadiusSlider(title: "Top", value: $rule.top).onChange(of: rule.top) { changed() }
+                RadiusSlider(title: "Bottom", value: $rule.bottom).onChange(of: rule.bottom) { changed() }
             }
         }
         .padding(.vertical, 2)
@@ -326,22 +326,22 @@ struct StatusPane: View {
         Form {
             PaneHeader(pane: .status)
             Section {
-                StatusRow(title: "Sistem Bütünlük Koruması (SIP)", ok: info.sip, yes: "Kapalı", no: "Açık", relaxed: true,
-                          info: "MacTweak'in diğer uygulamalara yüklenebilmesi için kapalı olmalı. Yalnızca Kurtarma Modu'nda değiştirilir.")
-                StatusRow(title: "AMFI denetimi", ok: info.amfi, yes: "Kapalı", no: "Açık", relaxed: true,
-                          info: "İmzalı uygulamalara kütüphane yüklenebilmesi için kapalı olmalı (boot-args).")
-                StatusRow(title: "FileVault", ok: info.fileVault, yes: "Açık", no: "Kapalı",
-                          info: "Disk şifrelemesi. MacTweak'le ilgisi yok; açık kalması önerilir.")
+                StatusRow(title: "System Integrity Protection (SIP)", ok: info.sip, yes: "Off", no: "On", relaxed: true,
+                          info: "Must be off so MacTweak can load into other apps. It can only be changed in Recovery Mode.")
+                StatusRow(title: "AMFI denetimi", ok: info.amfi, yes: "Off", no: "On", relaxed: true,
+                          info: "Must be off so the library can load into signed apps (boot-args).")
+                StatusRow(title: "FileVault", ok: info.fileVault, yes: "On", no: "Off",
+                          info: "Disk encryption. Unrelated to MacTweak; keeping it on is recommended.")
             } header: {
-                Text("Sistem")
+                Text("System")
             } footer: {
-                Text("SIP ve AMFI'nin kapalı olması macOS'un bir savunmasını gevşetir. MacTweak root yetkisi istemez ve sistem süreçlerine kod yüklemez; yalnızca sizin açtığınız uygulamalara yüklenir.")
+                Text("Turning SIP and AMFI off relaxes one of macOS's defences. MacTweak needs no root access and loads no code into system processes; it only loads into apps you open.")
             }
             Section("MacTweak") {
-                StatusRow(title: "Arka plan ajanı", ok: info.agent, yes: "Çalışıyor", no: "Çalışmıyor")
-                StatusRow(title: "Yeni uygulamalara yükleme", ok: info.environment, yes: "Açık", no: "Kapalı")
+                StatusRow(title: "Background agent", ok: info.agent, yes: "Running", no: "Not running")
+                StatusRow(title: "Loading into new apps", ok: info.environment, yes: "On", no: "Off")
                 if info.liquidRadius {
-                    Label("Liquid Radius hâlâ etkin. İki araç aynı yerlere bağlanır; birini kapatın.",
+                    Label("Liquid Radius is still active. Both tools hook the same places; turn one off.",
                           systemImage: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
                 }
@@ -353,27 +353,27 @@ struct StatusPane: View {
                         Text(app.localizedName ?? app.bundleIdentifier ?? "?")
                         Spacer()
                         switch SystemControl.loadState(app.processIdentifier) {
-                        case .active: Text("Etkin").foregroundStyle(.green)
-                        case .inert: Text("Sistem penceresi").foregroundStyle(.secondary)
+                        case .active: Text("Active").foregroundStyle(.green)
+                        case .inert: Text("System window").foregroundStyle(.secondary)
                         case .missing:
                             if relaunching.contains(app.processIdentifier) {
                                 ProgressView().controlSize(.small)
                             } else {
-                                Button("Yeniden Başlat") { relaunch(app) }.disabled(!info.environment)
+                                Button("Relaunch") { relaunch(app) }.disabled(!info.environment)
                             }
                         }
                     }
                 }
             } header: {
                 HStack {
-                    Text("Açık uygulamalar")
+                    Text("Open apps")
                     Spacer()
-                    Button("Yenile", systemImage: "arrow.clockwise", action: load)
+                    Button("Refresh", systemImage: "arrow.clockwise", action: load)
                         .labelStyle(.iconOnly)
                         .buttonStyle(.borderless)
                 }
             } footer: {
-                Text("MacTweak, ajan başladıktan sonra açılan uygulamalara yüklenir. Daha önce açılmış olanları yeniden başlatın.")
+                Text("MacTweak loads into apps opened after the agent started. Relaunch the ones that were already open.")
             }
         }
         .formStyle(.grouped)
@@ -409,9 +409,9 @@ struct AboutPane: View {
                 VStack(spacing: 8) {
                     Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 96, height: 96)
                     Text("MacTweak").font(.title2.bold())
-                    Text("Sürüm \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")")
+                    Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")")
                         .foregroundStyle(.secondary)
-                    Text("macOS 27 pencerelerini istediğiniz gibi ayarlayın: köşeler, düğmeler, başlık çubuğu.")
+                    Text("Tweak macOS 27 windows your way: corners, buttons, title bar.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -420,26 +420,26 @@ struct AboutPane: View {
                 .padding(.vertical, 6)
             }
             Section {
-                LabeledContent("Veri gönderimi", value: "Yok, ağ bağlantısı kurmaz")
-                LabeledContent("Root yetkisi", value: "Gerekmez")
-                LabeledContent("Çökme koruması", value: "Çöken uygulamayı hariç tutar")
+                LabeledContent("Data collection", value: "None, it makes no network connections")
+                LabeledContent("Root access", value: "Not needed")
+                LabeledContent("Crash protection", value: "Excludes an app that crashes")
             }
             Section {
-                Text("Bir uygulama açılmıyorsa Uygulama Kuralları'ndan hariç tutun. Hiçbir şey açılmıyorsa Mac'i Güvenli Mod'da başlatın (oturum ajanları çalışmaz) ve MacTweak'i kaldırın.")
+                Text("If an app won't open, exclude it in App Rules. If nothing opens, start your Mac in Safe Mode (login agents don't run) and remove MacTweak.")
                     .foregroundStyle(.secondary)
-                Button("MacTweak'i Kaldır…", role: .destructive) { confirmRemove = true }
+                Button("Remove MacTweak…", role: .destructive) { confirmRemove = true }
             } header: {
-                Text("Sorun olursa")
+                Text("If something goes wrong")
             }
         }
         .formStyle(.grouped)
-        .confirmationDialog("MacTweak kaldırılsın mı?", isPresented: $confirmRemove) {
-            Button("Kaldır", role: .destructive) {
+        .confirmationDialog("Remove MacTweak?", isPresented: $confirmRemove) {
+            Button("Remove", role: .destructive) {
                 SystemControl.removeEverything()
                 NSWorkspace.shared.recycle([Bundle.main.bundleURL]) { _, _ in NSApp.terminate(nil) }
             }
         } message: {
-            Text("Ajan durur, açık pencereler varsayılana döner ve uygulama Çöp Sepeti'ne taşınır. Tercihler silinmez.")
+            Text("The agent stops, open windows return to the default, and the app moves to the Trash. Preferences are kept.")
         }
     }
 }

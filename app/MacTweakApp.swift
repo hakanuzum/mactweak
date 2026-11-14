@@ -57,12 +57,12 @@ struct RootView: View {
         .navigationTitle(current?.title ?? "MacTweak")
         .toolbar {
             ToolbarItemGroup(placement: .navigation) {
-                Button("Geri", systemImage: "chevron.left") { step(-1) }.disabled(position == 0)
-                Button("İleri", systemImage: "chevron.right") { step(1) }.disabled(position >= history.count - 1)
-                Button("Tümünü Göster", systemImage: "square.grid.3x3.fill") { open(nil) }
+                Button("Back", systemImage: "chevron.left") { step(-1) }.disabled(position == 0)
+                Button("Forward", systemImage: "chevron.right") { step(1) }.disabled(position >= history.count - 1)
+                Button("Show All", systemImage: "square.grid.3x3.fill") { open(nil) }
             }
         }
-        .searchable(text: $search, placement: .toolbar, prompt: "Ara")
+        .searchable(text: $search, placement: .toolbar, prompt: "Search")
         .onSubmit(of: .search) {
             // Enter opens the first matching pane, like System Preferences.
             if let first = Pane.allCases.first(where: { $0.matches(search) }) { open(first) }
@@ -125,7 +125,7 @@ struct IconGrid: View {
                     .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("MacTweak").font(.system(size: 26, weight: .regular))
-                    Text("Pencere ayarları · \(enabled ? "Etkin" : "Kapalı")")
+                    Text("Window tweaks · \(enabled ? "On" : "Off")")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }

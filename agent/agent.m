@@ -222,8 +222,8 @@ static void auto_exclude(NSString *bundle_id, NSString *name, NSString *reason) 
     automatic[bundle_id] = @{@"name" : name ?: bundle_id, @"reason" : reason, @"date" : date};
     pref_set(@"autoExcludedApps", automatic);
     write_states();
-    notify_user([NSString stringWithFormat:@"%@ hariç tutuldu", name ?: bundle_id],
-                [reason stringByAppendingString:@" MacTweak ayarlarından geri alabilirsiniz."]);
+    notify_user([NSString stringWithFormat:@"%@ was excluded", name ?: bundle_id],
+                [reason stringByAppendingString:@" You can undo this in MacTweak settings."]);
     logf_(@"auto-excluded %@ (%@)", bundle_id, reason);
 }
 
@@ -258,7 +258,7 @@ static void inspect_report(NSString *path) {
             }
 
     if (guilty) {
-        auto_exclude(bundle_id, name, @"Çöken kodda MacTweak'in kütüphanesi vardı.");
+        auto_exclude(bundle_id, name, @"MacTweak's library was in the crashing code.");
         return;
     }
     // The core was only loaded: still exclude after 3 crashes in 10 minutes.
@@ -268,7 +268,7 @@ static void inspect_report(NSString *path) {
     [list filterUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(NSDate *t, id _) {
               return -t.timeIntervalSinceNow < 600;
           }]];
-    if (list.count >= 3) auto_exclude(bundle_id, name, @"10 dakikada 3 kez çöktü.");
+    if (list.count >= 3) auto_exclude(bundle_id, name, @"Crashed 3 times in 10 minutes.");
 }
 
 static void scan_reports(NSString *dir) {

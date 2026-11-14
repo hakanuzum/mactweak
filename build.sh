@@ -54,7 +54,7 @@ fi
 iconutil -c icns "$SET" -o "$C/Resources/AppIcon.icns"
 
 mkdir -p "$C/Resources/Icons"
-cp assets/icons/*.png "$C/Resources/Icons/"
+cp assets/icons/*.svg "$C/Resources/Icons/"
 cp app/Info.plist "$C/Info.plist"
 
 echo "› ad-hoc signature"
