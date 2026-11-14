@@ -19,7 +19,7 @@ enum Pane: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Fluent Emoji 3D artwork in Resources/Icons (MIT, see assets/FLUENT-EMOJI-LICENSE).
+    /// KDE Oxygen artwork in Resources/Icons (LGPL-3.0, see assets/OXYGEN-ICONS-COPYING).
     var iconName: String { rawValue }
 
     var summary: String {

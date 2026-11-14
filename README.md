@@ -15,7 +15,7 @@ MacTweak root yetkisi istemez ve sistem süreçlerine kod yüklemez.
 | `core/` | `libmactweak.dylib` | Her uygulamaya `DYLD_INSERT_LIBRARIES` ile yüklenir. Hiçbir çerçeveye bağlanmaz: AppKit'i olmayan süreçlerde (terminal komutları) yüklenir ama hiçbir şey yapmaz. AppKit sınıflarına adlarıyla, objc çalışma zamanından ulaşır. |
 | `agent/` | `mactweak-agent` | Kullanıcı LaunchAgent'ı. Tercihleri notify durumlarına yazar ve tutar, çekirdeği `~/Library/Application Support/MacTweak`'e kopyalar, `launchctl setenv` ile ortama ekler, çökme raporlarını izler. |
 | `app/` | `MacTweak.app` | SwiftUI ayar uygulaması. |
-| `icon/` | `AppIcon.icns` | `icon/private/icon.png` varsa onu kullanır (git'e girmez), yoksa `icon/main.swift` ikonu çizer. |
+| `icon/` | `AppIcon.icns` | `icon/main.swift` ikonu vektörle çizer (plaka, şalter, vidalar, el damgası). `icon/private/icon.png` varsa onu kullanır (git'e girmez). |
 
 Çekirdek modülleri: `corners.m` (köşe yarıçapı), `titlebar.m` (başlık çubuğu), `buttons.m` (trafik ışığı temaları). Yeni bir modül için:
 
@@ -71,4 +71,5 @@ Xcode 27 gerekir (`DEVELOPER_DIR` varsayılanı `/Applications/Xcode.app`).
 
 ## Lisanslar
 
-`assets/hand-high-contrast.svg` ve `assets/icons/*.png`: Microsoft Fluent Emoji (3D), MIT (`assets/FLUENT-EMOJI-LICENSE`).
+- `assets/icons/*.png`: KDE Oxygen ikon teması (Nuno Pinheiro, David Vignoni ve diğerleri), LGPL-3.0-or-later (`assets/OXYGEN-ICONS-COPYING`, `assets/OXYGEN-ICONS-LGPL-3.0.txt`). Kaynak: github.com/KDE/oxygen-icons, 128x128.
+- `assets/hand-*.svg`: Microsoft Fluent Emoji, MIT (`assets/FLUENT-EMOJI-LICENSE`). Uygulama ikonundaki el damgası bunlardan çizilir.
